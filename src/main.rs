@@ -127,6 +127,7 @@ fn main() {
             display_path,
             lhs_path,
             rhs_path,
+            json,
             ..
         } => {
             let use_color = should_use_color(color_output);
@@ -140,6 +141,7 @@ fn main() {
                 {
                     print_diff_result(
                         display_width,
+                        json,
                         use_color,
                         background_color,
                         print_unchanged,
@@ -157,6 +159,7 @@ fn main() {
                 );
                 print_diff_result(
                     display_width,
+                    json,
                     use_color,
                     background_color,
                     print_unchanged,
@@ -344,6 +347,7 @@ fn diff_directories(
 // TODO: factor out a DiffOptions struct.
 fn print_diff_result(
     display_width: usize,
+    use_json: bool,
     use_color: bool,
     background: BackgroundColor,
     print_unchanged: bool,

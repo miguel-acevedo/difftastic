@@ -108,6 +108,11 @@ fn app() -> clap::App<'static> {
                 .hide(true)
                 .allow_invalid_utf8(true),
         )
+        .arg(
+            Arg::new("json")
+                .long("json")
+                .help("Display the diff as JSON")
+        )
         .setting(AppSettings::ArgRequiredElseHelp)
 }
 
@@ -123,6 +128,7 @@ pub enum Mode {
         display_path: String,
         lhs_path: String,
         rhs_path: String,
+        json: bool,
     },
     DumpTreeSitter {
         path: String,
@@ -268,6 +274,7 @@ pub fn parse_args() -> Mode {
 
     let print_unchanged = !matches.is_present("skip-unchanged");
     let missing_as_empty = matches.is_present("missing-as-empty");
+    let json = matches.is_present("json");
 
     Mode::Diff {
         node_limit,
@@ -280,6 +287,7 @@ pub fn parse_args() -> Mode {
         display_path,
         lhs_path,
         rhs_path,
+        json,
     }
 }
 
