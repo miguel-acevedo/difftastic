@@ -377,7 +377,7 @@ fn print_diff_result(
                             serde_json::json!({
                                 "path": &summary.path,
                                 "language": lang_name,
-                                "changed": false
+                                "changed": false,
                             })
                         );
                     } else {
@@ -436,7 +436,16 @@ fn print_diff_result(
         }
         (FileContent::Binary(lhs_bytes), FileContent::Binary(rhs_bytes)) => {
             let changed = lhs_bytes != rhs_bytes;
-            if print_unchanged || changed {
+            if use_json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "path": &summary.path,
+                        "language": "binary",
+                        "changed": changed,
+                    })
+                );
+            } else if print_unchanged || changed {
                 println!(
                     "{}",
                     style::header(&summary.path, 1, 1, "binary", use_color, background)
@@ -450,11 +459,22 @@ fn print_diff_result(
         }
         (_, FileContent::Binary(_)) | (FileContent::Binary(_), _) => {
             // We're diffing a binary file against a text file.
-            println!(
-                "{}",
-                style::header(&summary.path, 1, 1, "binary", use_color, background)
-            );
-            println!("Binary contents changed.")
+            if use_json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "path": &summary.path,
+                        "language": "binary",
+                        "changed": true,
+                    })
+                );
+            } else {
+                println!(
+                    "{}",
+                    style::header(&summary.path, 1, 1, "binary", use_color, background)
+                );
+                println!("Binary contents changed.")
+            }
         }
     }
 }
