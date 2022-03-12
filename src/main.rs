@@ -128,7 +128,7 @@ fn main() {
             display_path,
             lhs_path,
             rhs_path,
-            json,
+            use_json,
             ..
         } => {
             let use_color = should_use_color(color_output);
@@ -137,17 +137,21 @@ fn main() {
             let rhs_path = Path::new(&rhs_path);
 
             if lhs_path.is_dir() && rhs_path.is_dir() {
-                for diff_result in
-                    diff_directories(lhs_path, rhs_path, missing_as_empty, node_limit, byte_limit)
-                {
-                    print_diff_result(
-                        display_width,
-                        json,
-                        use_color,
-                        background_color,
-                        print_unchanged,
-                        &diff_result,
-                    );
+                let results =
+                    diff_directories(lhs_path, rhs_path, missing_as_empty, node_limit, byte_limit);
+
+                if use_json {
+                    json::print_directory(results);
+                } else {
+                    for diff_result in results {
+                        print_diff_result(
+                            display_width,
+                            use_color,
+                            background_color,
+                            print_unchanged,
+                            &diff_result,
+                        )
+                    }
                 }
             } else {
                 let diff_result = diff_file(
@@ -158,14 +162,18 @@ fn main() {
                     node_limit,
                     byte_limit,
                 );
-                print_diff_result(
-                    display_width,
-                    json,
-                    use_color,
-                    background_color,
-                    print_unchanged,
-                    &diff_result,
-                );
+
+                if use_json {
+                    json::print(diff_result);
+                } else {
+                    print_diff_result(
+                        display_width,
+                        use_color,
+                        background_color,
+                        print_unchanged,
+                        &diff_result,
+                    );
+                }
             }
         }
     };
@@ -348,7 +356,6 @@ fn diff_directories(
 // TODO: factor out a DiffOptions struct.
 fn print_diff_result(
     display_width: usize,
-    use_json: bool,
     use_color: bool,
     background: BackgroundColor,
     print_unchanged: bool,
@@ -371,43 +378,22 @@ fn print_diff_result(
             let lang_name = summary.language.clone().unwrap_or_else(|| "Text".into());
             if hunks.is_empty() {
                 if print_unchanged {
-                    if use_json {
-                        println!(
-                            "{}",
-                            serde_json::json!({
-                                "path": &summary.path,
-                                "language": lang_name,
-                                "changed": false,
-                            })
-                        );
+                    println!(
+                        "{}",
+                        style::header(&summary.path, 1, 1, &lang_name, use_color, background)
+                    );
+                    if lang_name == "Text" {
+                        // TODO: there are other Text names now, so
+                        // they will hit the second case incorrectly.
+                        println!("No changes.\n");
                     } else {
-                        println!(
-                            "{}",
-                            style::header(&summary.path, 1, 1, &lang_name, use_color, background)
-                        );
-                        if lang_name == "Text" {
-                            // TODO: there are other Text names now, so
-                            // they will hit the second case incorrectly.
-                            println!("No changes.\n");
-                        } else {
-                            println!("No syntactic changes.\n");
-                        }
+                        println!("No syntactic changes.\n");
                     }
                 }
                 return;
             }
 
-            if use_json {
-                json::print(
-                    &hunks,
-                    &summary.path,
-                    &lang_name,
-                    lhs_src,
-                    rhs_src,
-                    &summary.lhs_positions,
-                    &summary.rhs_positions,
-                );
-            } else if env::var("INLINE").is_ok() {
+            if env::var("INLINE").is_ok() {
                 inline::print(
                     lhs_src,
                     rhs_src,
@@ -436,16 +422,7 @@ fn print_diff_result(
         }
         (FileContent::Binary(lhs_bytes), FileContent::Binary(rhs_bytes)) => {
             let changed = lhs_bytes != rhs_bytes;
-            if use_json {
-                println!(
-                    "{}",
-                    serde_json::json!({
-                        "path": &summary.path,
-                        "language": "binary",
-                        "changed": changed,
-                    })
-                );
-            } else if print_unchanged || changed {
+            if print_unchanged || changed {
                 println!(
                     "{}",
                     style::header(&summary.path, 1, 1, "binary", use_color, background)
@@ -459,22 +436,11 @@ fn print_diff_result(
         }
         (_, FileContent::Binary(_)) | (FileContent::Binary(_), _) => {
             // We're diffing a binary file against a text file.
-            if use_json {
-                println!(
-                    "{}",
-                    serde_json::json!({
-                        "path": &summary.path,
-                        "language": "binary",
-                        "changed": true,
-                    })
-                );
-            } else {
-                println!(
-                    "{}",
-                    style::header(&summary.path, 1, 1, "binary", use_color, background)
-                );
-                println!("Binary contents changed.")
-            }
+            println!(
+                "{}",
+                style::header(&summary.path, 1, 1, "binary", use_color, background)
+            );
+            println!("Binary contents changed.")
         }
     }
 }

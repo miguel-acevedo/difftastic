@@ -2,11 +2,12 @@ use serde::Serialize;
 use std::collections::HashMap;
 
 use crate::{
-    context::all_matched_lines_filled,
-    hunks::{matched_lines_for_hunk, Hunk},
+    context::{all_matched_lines_filled, opposite_positions},
+    hunks::{matched_lines_for_hunk, matched_pos_to_hunks, merge_adjacent},
     lines::LineNumber,
     side_by_side::lines_with_novel,
     syntax::{AtomKind, MatchKind, MatchedPos, TokenKind as SyntaxTokenKind},
+    DiffResult, FileContent, MaxLine,
 };
 
 #[derive(Debug, Serialize)]
@@ -15,47 +16,154 @@ enum Status {
     Changed,
     Created,
     Deleted,
+    Unchanged,
 }
 
 #[derive(Debug, Serialize)]
-struct File<'f> {
-    language: &'f str,
-    path: &'f str,
+struct File {
+    language: String,
+    path: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    chunks: Vec<Vec<Line<'f>>>,
+    chunks: Vec<Vec<Line>>,
     status: Status,
 }
 
-impl<'f> File<'f> {
-    fn with_sections(language: &'f str, path: &'f str, chunks: Vec<Vec<Line<'f>>>) -> File<'f> {
+impl File {
+    fn with_sections<L, P>(language: L, path: P, chunks: Vec<Vec<Line>>) -> File
+    where
+        L: Into<String>,
+        P: Into<String>,
+    {
         File {
-            language,
-            path,
+            language: language.into(),
+            path: path.into(),
             chunks,
             status: Status::Changed,
         }
     }
 
-    fn with_status(language: &'f str, path: &'f str, status: Status) -> File<'f> {
+    fn with_status<L, P>(language: L, path: P, status: Status) -> File
+    where
+        L: Into<String>,
+        P: Into<String>,
+    {
         File {
-            language,
-            path,
+            language: language.into(),
+            path: path.into(),
             chunks: Vec::new(),
             status,
         }
     }
 }
 
-#[derive(Debug, Serialize)]
-struct Line<'l> {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    lhs: Option<Side<'l>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    rhs: Option<Side<'l>>,
+impl From<DiffResult> for File {
+    fn from(summary: DiffResult) -> Self {
+        match (summary.lhs_src, summary.rhs_src) {
+            (FileContent::Text(lhs_src), FileContent::Text(rhs_src)) => {
+                // TODO: move into function as it effectively duplicates lines 365-375 of main::print_diff_result
+                let opposite_to_lhs = opposite_positions(&summary.lhs_positions);
+                let opposite_to_rhs = opposite_positions(&summary.rhs_positions);
+
+                let hunks = matched_pos_to_hunks(&summary.lhs_positions, &summary.rhs_positions);
+                let hunks = merge_adjacent(
+                    &hunks,
+                    &opposite_to_lhs,
+                    &opposite_to_rhs,
+                    lhs_src.max_line(),
+                    rhs_src.max_line(),
+                );
+
+                let language = summary.language.clone().unwrap_or_else(|| "Text".into());
+                if hunks.is_empty() {
+                    return File::with_status(&language, &summary.path, Status::Unchanged);
+                }
+
+                if lhs_src.is_empty() {
+                    return File::with_status(&language, &summary.path, Status::Created);
+                }
+                if rhs_src.is_empty() {
+                    return File::with_status(&language, &summary.path, Status::Deleted);
+                }
+
+                let lhs_lines = lhs_src.split('\n').collect::<Vec<&str>>();
+                let rhs_lines = rhs_src.split('\n').collect::<Vec<&str>>();
+
+                let (lhs_lines_with_novel, rhs_lines_with_novel) =
+                    lines_with_novel(&summary.lhs_positions, &summary.rhs_positions);
+                let matched_lines =
+                    all_matched_lines_filled(&summary.lhs_positions, &summary.rhs_positions);
+
+                let mut chunks = Vec::with_capacity(hunks.len());
+                for hunk in hunks.iter() {
+                    let mut lines = HashMap::<(Option<usize>, Option<usize>), Line>::with_capacity(
+                        hunk.lines.len(),
+                    );
+
+                    let aligned_lines = matched_lines_for_hunk(&matched_lines, hunk);
+
+                    for (lhs_line_num, rhs_line_num) in aligned_lines {
+                        if !lhs_lines_with_novel.contains(&lhs_line_num.unwrap_or(LineNumber(0)))
+                            && !rhs_lines_with_novel
+                                .contains(&rhs_line_num.unwrap_or(LineNumber(0)))
+                        {
+                            continue;
+                        }
+
+                        let line = lines
+                            .entry((lhs_line_num.map(|l| l.0), rhs_line_num.map(|l| l.0)))
+                            .or_insert_with(|| {
+                                Line::new(lhs_line_num.map(|l| l.0), rhs_line_num.map(|l| l.0))
+                            });
+
+                        if let Some(line_num) = lhs_line_num {
+                            add_changes_to_side(
+                                line.lhs.as_mut().unwrap(),
+                                line_num,
+                                &lhs_lines,
+                                &summary.lhs_positions,
+                            );
+                        }
+                        if let Some(line_num) = rhs_line_num {
+                            add_changes_to_side(
+                                line.rhs.as_mut().unwrap(),
+                                line_num,
+                                &rhs_lines,
+                                &summary.rhs_positions,
+                            );
+                        }
+                    }
+
+                    chunks.push(lines.into_values().collect());
+                }
+
+                File::with_sections(&language, &summary.path, chunks)
+            }
+            (FileContent::Binary(lhs_byes), FileContent::Binary(rhs_bytes)) => File::with_status(
+                "binary",
+                &summary.path,
+                if lhs_byes == rhs_bytes {
+                    Status::Unchanged
+                } else {
+                    Status::Changed
+                },
+            ),
+            (_, FileContent::Binary(_)) | (FileContent::Binary(_), _) => {
+                File::with_status("binary", &summary.path, Status::Changed)
+            }
+        }
+    }
 }
 
-impl<'l> Line<'l> {
-    fn new(lhs_number: Option<usize>, rhs_number: Option<usize>) -> Line<'l> {
+#[derive(Debug, Serialize)]
+struct Line {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lhs: Option<Side>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rhs: Option<Side>,
+}
+
+impl Line {
+    fn new(lhs_number: Option<usize>, rhs_number: Option<usize>) -> Line {
         Line {
             lhs: lhs_number.map(Side::new),
             rhs: rhs_number.map(Side::new),
@@ -64,13 +172,13 @@ impl<'l> Line<'l> {
 }
 
 #[derive(Debug, Serialize)]
-struct Side<'s> {
+struct Side {
     number: usize,
-    changes: Vec<Change<'s>>,
+    changes: Vec<Change>,
 }
 
-impl<'s> Side<'s> {
-    fn new(number: usize) -> Side<'s> {
+impl Side {
+    fn new(number: usize) -> Side {
         Side {
             number,
             changes: Vec::new(),
@@ -79,10 +187,10 @@ impl<'s> Side<'s> {
 }
 
 #[derive(Debug, Serialize)]
-struct Change<'c> {
+struct Change {
     start: usize,
     end: usize,
-    content: &'c str,
+    content: String,
     kind: TokenKind,
 }
 
@@ -113,71 +221,22 @@ impl From<SyntaxTokenKind> for TokenKind {
     }
 }
 
-pub fn print(
-    hunks: &[Hunk],
-    display_path: &str,
-    lang_name: &str,
-    lhs_src: &str,
-    rhs_src: &str,
-    lhs_mps: &[MatchedPos],
-    rhs_mps: &[MatchedPos],
-) {
-    if lhs_src.is_empty() {
-        println!(
-            "{}",
-            serde_json::to_string(&File::with_status(lang_name, display_path, Status::Created))
-                .expect("failed to serialize created file")
-        );
-        return;
-    }
-    if rhs_src.is_empty() {
-        println!(
-            "{}",
-            serde_json::to_string(&File::with_status(lang_name, display_path, Status::Deleted))
-                .expect("failed to serialize deleted file")
-        );
-        return;
-    }
-
-    let lhs_lines = lhs_src.split('\n').collect::<Vec<&str>>();
-    let rhs_lines = rhs_src.split('\n').collect::<Vec<&str>>();
-
-    let (lhs_lines_with_novel, rhs_lines_with_novel) = lines_with_novel(lhs_mps, rhs_mps);
-    let matched_lines = all_matched_lines_filled(lhs_mps, rhs_mps);
-
-    let mut chunks = Vec::with_capacity(hunks.len());
-    for hunk in hunks.iter() {
-        let mut lines =
-            HashMap::<(Option<usize>, Option<usize>), Line>::with_capacity(hunk.lines.len());
-
-        let aligned_lines = matched_lines_for_hunk(&matched_lines, hunk);
-
-        for (lhs_line_num, rhs_line_num) in aligned_lines {
-            if !lhs_lines_with_novel.contains(&lhs_line_num.unwrap_or(LineNumber(0)))
-                && !rhs_lines_with_novel.contains(&rhs_line_num.unwrap_or(LineNumber(0)))
-            {
-                continue;
-            }
-
-            let line = lines
-                .entry((lhs_line_num.map(|l| l.0), rhs_line_num.map(|l| l.0)))
-                .or_insert_with(|| Line::new(lhs_line_num.map(|l| l.0), rhs_line_num.map(|l| l.0)));
-
-            if let Some(line_num) = lhs_line_num {
-                add_changes_to_side(line.lhs.as_mut().unwrap(), line_num, &lhs_lines, lhs_mps);
-            }
-            if let Some(line_num) = rhs_line_num {
-                add_changes_to_side(line.rhs.as_mut().unwrap(), line_num, &rhs_lines, rhs_mps);
-            }
-        }
-
-        chunks.push(lines.into_values().collect());
-    }
-
+pub fn print_directory(diffs: Vec<DiffResult>) {
+    let files = diffs
+        .into_iter()
+        .map(DiffResult::into)
+        .collect::<Vec<File>>();
     println!(
         "{}",
-        serde_json::to_string(&File::with_sections(lang_name, display_path, chunks))
-            .expect("failed to serialize file")
+        serde_json::to_string(&files).expect("failed to serialize files")
+    );
+}
+
+pub fn print(diff: DiffResult) {
+    let file: File = diff.into();
+    println!(
+        "{}",
+        serde_json::to_string(&file).expect("failed to serialize file")
     );
 }
 
@@ -189,10 +248,10 @@ fn matches_for_line(matches: &[MatchedPos], line_num: LineNumber) -> Vec<&Matche
         .collect()
 }
 
-fn add_changes_to_side<'s>(
-    side: &mut Side<'s>,
+fn add_changes_to_side(
+    side: &mut Side,
     line_num: LineNumber,
-    src_lines: &[&'s str],
+    src_lines: &[&str],
     all_matches: &[MatchedPos],
 ) {
     let src_line = src_lines[line_num.0];
@@ -202,7 +261,7 @@ fn add_changes_to_side<'s>(
         side.changes.push(Change {
             start: m.pos.start_col,
             end: m.pos.end_col,
-            content: &src_line[m.pos.start_col..m.pos.end_col],
+            content: src_line[m.pos.start_col..m.pos.end_col].into(),
             kind: match m.kind {
                 MatchKind::UnchangedToken { highlight, .. } => highlight,
                 MatchKind::Novel { highlight, .. } => highlight,

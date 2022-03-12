@@ -128,7 +128,7 @@ pub enum Mode {
         display_path: String,
         lhs_path: String,
         rhs_path: String,
-        json: bool,
+        use_json: bool,
     },
     DumpTreeSitter {
         path: String,
@@ -287,7 +287,7 @@ pub fn parse_args() -> Mode {
         display_path,
         lhs_path,
         rhs_path,
-        json,
+        use_json: json,
     }
 }
 
