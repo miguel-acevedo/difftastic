@@ -15,6 +15,7 @@ mod graph;
 mod guess_language;
 mod hunks;
 mod inline;
+mod json;
 mod line_parser;
 mod lines;
 mod myers_diff;
@@ -370,22 +371,43 @@ fn print_diff_result(
             let lang_name = summary.language.clone().unwrap_or_else(|| "Text".into());
             if hunks.is_empty() {
                 if print_unchanged {
-                    println!(
-                        "{}",
-                        style::header(&summary.path, 1, 1, &lang_name, use_color, background)
-                    );
-                    if lang_name == "Text" {
-                        // TODO: there are other Text names now, so
-                        // they will hit the second case incorrectly.
-                        println!("No changes.\n");
+                    if use_json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "path": &summary.path,
+                                "language": lang_name,
+                                "changed": false
+                            })
+                        );
                     } else {
-                        println!("No syntactic changes.\n");
+                        println!(
+                            "{}",
+                            style::header(&summary.path, 1, 1, &lang_name, use_color, background)
+                        );
+                        if lang_name == "Text" {
+                            // TODO: there are other Text names now, so
+                            // they will hit the second case incorrectly.
+                            println!("No changes.\n");
+                        } else {
+                            println!("No syntactic changes.\n");
+                        }
                     }
                 }
                 return;
             }
 
-            if env::var("INLINE").is_ok() {
+            if use_json {
+                json::print(
+                    &hunks,
+                    &summary.path,
+                    &lang_name,
+                    lhs_src,
+                    rhs_src,
+                    &summary.lhs_positions,
+                    &summary.rhs_positions,
+                );
+            } else if env::var("INLINE").is_ok() {
                 inline::print(
                     lhs_src,
                     rhs_src,
