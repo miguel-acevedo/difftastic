@@ -242,7 +242,7 @@ pub fn print(diff: DiffResult) {
 
 fn matches_for_line(matches: &[MatchedPos], line_num: LineNumber) -> Vec<&MatchedPos> {
     matches
-        .into_iter()
+        .iter()
         .filter(|m| m.pos.line == line_num)
         .filter(|m| m.kind.is_change())
         .collect()
