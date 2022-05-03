@@ -1026,95 +1026,62 @@
 <span id="1026">1026</span>
 <span id="1027">1027</span>
 <span id="1028">1028</span>
-<span id="1029">1029</span>
-<span id="1030">1030</span>
-<span id="1031">1031</span>
-<span id="1032">1032</span>
-<span id="1033">1033</span>
-<span id="1034">1034</span>
-<span id="1035">1035</span>
-<span id="1036">1036</span>
-<span id="1037">1037</span>
-<span id="1038">1038</span>
-<span id="1039">1039</span>
-<span id="1040">1040</span>
-<span id="1041">1041</span>
-<span id="1042">1042</span>
-<span id="1043">1043</span>
-<span id="1044">1044</span>
-<span id="1045">1045</span>
-<span id="1046">1046</span>
-<span id="1047">1047</span>
-<span id="1048">1048</span>
-<span id="1049">1049</span>
-<span id="1050">1050</span>
-<span id="1051">1051</span>
-<span id="1052">1052</span>
-<span id="1053">1053</span>
-<span id="1054">1054</span>
-<span id="1055">1055</span>
-<span id="1056">1056</span>
-<span id="1057">1057</span>
-<span id="1058">1058</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Syntax tree definitions with change metadata.</span>
 
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::mutable_key_type</span>)]</span> <span class="comment">// Hash for Syntax doesn&#39;t use mutable fields.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">cell::Cell</span>,
-    <span class="ident">collections::HashMap</span>,
-    <span class="ident">env</span>, <span class="ident">fmt</span>,
-    <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
-};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::Cell</span>, <span class="ident">collections::HashMap</span>, <span class="ident">env</span>, <span class="ident">fmt</span>, <span class="ident">hash::Hash</span>, <span class="ident">num::NonZeroU32</span>};
 <span class="kw">use</span> <span class="ident">typed_arena::Arena</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">changes::ChangeKind</span>,
+    <span class="ident">changes</span>::{<span class="ident">ChangeKind</span>::<span class="kw-2">*</span>, <span class="ident">ChangeMap</span>},
     <span class="ident">lines</span>::{<span class="ident">LineNumber</span>, <span class="ident">NewlinePositions</span>},
+    <span class="ident">myers_diff</span>,
     <span class="ident">positions::SingleLineSpan</span>,
 };
-<span class="kw">use</span> <span class="ident">ChangeKind</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">Syntax</span>::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">Unchanged</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
-    <span class="ident">ReplacedComment</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
-    <span class="ident">Novel</span>,
-}
-
-<span class="doccomment">/// A Debug implementation that ignores the corresponding node</span>
-<span class="doccomment">/// mentioned for Unchanged. Otherwise we will infinitely loop on</span>
-<span class="doccomment">/// unchanged nodes, which both point to the other.</span>
+<span class="doccomment">/// A Debug implementation that does not reucurse into the</span>
+<span class="doccomment">/// corresponding node mentioned for Unchanged. Otherwise we will</span>
+<span class="doccomment">/// infinitely loop on unchanged nodes, which both point to the other.</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Unchanged</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Unchanged&quot;</span>,
-            <span class="ident">ReplacedComment</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ReplacedComment&quot;</span>,
-            <span class="ident">Novel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Novel&quot;</span>,
+            <span class="ident">Unchanged</span>(<span class="ident">node</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;Unchanged(ID: {})&quot;</span>, <span class="ident">node</span>.<span class="ident">id</span>()),
+            <span class="ident">ReplacedComment</span>(<span class="ident">lhs_node</span>, <span class="ident">rhs_node</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">format!</span>(
+                    <span class="string">&quot;ReplacedComment(lhs ID: {}, rhs ID: {})&quot;</span>,
+                    <span class="ident">lhs_node</span>.<span class="ident">id</span>(),
+                    <span class="ident">rhs_node</span>.<span class="ident">id</span>()
+                )
+            }
+            <span class="ident">Novel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Novel&quot;</span>.<span class="ident">to_owned</span>(),
         };
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">desc</span>)
+        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>)
     }
 }
 
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SyntaxId</span> <span class="op">=</span> <span class="ident">NonZeroU32</span>;
+
 <span class="doccomment">/// Fields that are common to both `Syntax::List` and `Syntax::Atom`.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SyntaxInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The previous node with the same parent as this one.</span>
+    <span class="ident">previous_sibling</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The next node with the same parent as this one.</span>
-    <span class="kw">pub</span> <span class="ident">next_sibling</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">next_sibling</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The syntax node that occurs before this one, in a depth-first</span>
     <span class="doccomment">/// tree traversal.</span>
-    <span class="kw">pub</span> <span class="ident">prev</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">prev</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The parent syntax node, if present.</span>
     <span class="ident">parent</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Does the previous syntax node occur on the same line as the</span>
     <span class="doccomment">/// first line of this node?</span>
     <span class="ident">prev_is_contiguous</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Whether or not this syntax node has changed. This value is set</span>
-    <span class="doccomment">/// when computing the diff with another syntax tree.</span>
-    <span class="kw">pub</span> <span class="ident">change</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The number of nodes that are ancestors of this one.</span>
     <span class="ident">num_ancestors</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="doccomment">/// A number that uniquely identifies this syntax node.</span>
-    <span class="ident">unique_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">unique_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">SyntaxId</span><span class="op">&gt;</span>,
     <span class="doccomment">/// A number that uniquely identifies the content of this syntax</span>
     <span class="doccomment">/// node. This may be the same as nodes on the other side of the</span>
     <span class="doccomment">/// diff, or nodes at different positions.</span>
@@ -1126,13 +1093,13 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">SyntaxInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
+            <span class="ident">previous_sibling</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">next_sibling</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">prev</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">parent</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">prev_is_contiguous</span>: <span class="ident">Cell::new</span>(<span class="bool-val">false</span>),
-            <span class="ident">change</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">num_ancestors</span>: <span class="ident">Cell::new</span>(<span class="number">0</span>),
-            <span class="ident">unique_id</span>: <span class="ident">Cell::new</span>(<span class="number">0</span>),
+            <span class="ident">unique_id</span>: <span class="ident">Cell::new</span>(<span class="ident">NonZeroU32::new</span>(<span class="ident">u32::MAX</span>).<span class="ident">unwrap</span>()),
             <span class="ident">content_id</span>: <span class="ident">Cell::new</span>(<span class="number">0</span>),
         }
     }
@@ -1198,8 +1165,6 @@
                     .<span class="ident">field</span>(<span class="string">&quot;close_position&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">dbg_pos</span>(<span class="ident">close_position</span>));
 
                 <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_VERBOSE&quot;</span>).<span class="ident">is_ok</span>() {
-                    <span class="ident">ds</span>.<span class="ident">field</span>(<span class="string">&quot;change&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>());
-
                     <span class="kw">let</span> <span class="ident">next_sibling_s</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">info</span>.<span class="ident">next_sibling</span>.<span class="ident">get</span>() {
                         <span class="prelude-val">Some</span>(<span class="ident">List</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Some(List)&quot;</span>,
                         <span class="prelude-val">Some</span>(<span class="ident">Atom</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Some(Atom)&quot;</span>,
@@ -1227,7 +1192,6 @@
 
                 <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_VERBOSE&quot;</span>).<span class="ident">is_ok</span>() {
                     <span class="ident">ds</span>.<span class="ident">field</span>(<span class="string">&quot;highlight&quot;</span>, <span class="ident">highlight</span>);
-                    <span class="ident">ds</span>.<span class="ident">field</span>(<span class="string">&quot;change&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>());
                     <span class="kw">let</span> <span class="ident">next_sibling_s</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">info</span>.<span class="ident">next_sibling</span>.<span class="ident">get</span>() {
                         <span class="prelude-val">Some</span>(<span class="ident">List</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Some(List)&quot;</span>,
                         <span class="prelude-val">Some</span>(<span class="ident">Atom</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Some(Atom)&quot;</span>,
@@ -1330,7 +1294,7 @@
 
     <span class="doccomment">/// A unique ID of this syntax node. Every node is guaranteed to</span>
     <span class="doccomment">/// have a different value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SyntaxId</span> {
         <span class="self">self</span>.<span class="ident">info</span>().<span class="ident">unique_id</span>.<span class="ident">get</span>()
     }
 
@@ -1352,7 +1316,16 @@
                 <span class="ident">close_content</span>,
                 ..
             } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;{} ... {}&quot;</span>, <span class="ident">open_content</span>, <span class="ident">close_content</span>),
-            <span class="ident">Atom</span> { <span class="ident">content</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">content</span>.<span class="ident">into</span>(),
+            <span class="ident">Atom</span> {
+                <span class="ident">content</span>, <span class="ident">position</span>, ..
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">position</span>
+                    .<span class="ident">first</span>()
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">p</span>.<span class="ident">line</span>.<span class="ident">one_indexed</span>()))
+                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;?&quot;</span>.<span class="ident">to_owned</span>());
+
+                <span class="macro">format!</span>(<span class="string">&quot;{} line:{}&quot;</span>, <span class="ident">content</span>, <span class="ident">line</span>)
+            }
         }
     }
 
@@ -1371,36 +1344,6 @@
         };
         <span class="ident">position</span>.<span class="ident">last</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">lp</span><span class="op">|</span> <span class="ident">lp</span>.<span class="ident">line</span>)
     }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">info</span>().<span class="ident">change</span>.<span class="ident">get</span>()
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ck</span>: <span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">info</span>().<span class="ident">change</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">ck</span>));
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_change_deep</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ck</span>: <span class="ident">ChangeKind</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">set_change</span>(<span class="ident">ck</span>);
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="self">self</span> {
-            <span class="comment">// For unchanged lists, match up children with the</span>
-            <span class="comment">// unchanged children on the other side.</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Unchanged</span>(<span class="ident">List</span> {
-                <span class="ident">children</span>: <span class="ident">other_children</span>,
-                ..
-            }) <span class="op">=</span> <span class="ident">ck</span>
-            {
-                <span class="kw">for</span> (<span class="ident">child</span>, <span class="ident">other_child</span>) <span class="kw">in</span> <span class="ident">children</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">other_children</span>) {
-                    <span class="ident">child</span>.<span class="ident">set_change_deep</span>(<span class="ident">Unchanged</span>(<span class="ident">other_child</span>));
-                }
-            } <span class="kw">else</span> {
-                <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
-                    <span class="ident">child</span>.<span class="ident">set_change_deep</span>(<span class="ident">ck</span>);
-                }
-            };
-        }
-    }
 }
 
 <span class="doccomment">/// Initialise all the fields in `SyntaxInfo`.</span>
@@ -1411,9 +1354,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_info</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">lhs_roots</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">rhs_roots</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
-    <span class="comment">// TODO: start unique IDs at 1. This helps with hashing and makes</span>
-    <span class="comment">// it obvious if we&#39;ve forgotten to init the syntax info.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">NonZeroU32::new</span>(<span class="number">1</span>).<span class="ident">unwrap</span>();
     <span class="ident">init_info_single</span>(<span class="ident">lhs_roots</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id</span>);
     <span class="ident">init_info_single</span>(<span class="ident">rhs_roots</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id</span>);
 
@@ -1476,23 +1417,40 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_next_prev</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">roots</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
+    <span class="ident">set_prev_sibling</span>(<span class="ident">roots</span>);
     <span class="ident">set_next_sibling</span>(<span class="ident">roots</span>);
     <span class="ident">set_prev</span>(<span class="ident">roots</span>, <span class="prelude-val">None</span>);
     <span class="ident">set_prev_is_contiguous</span>(<span class="ident">roots</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">init_info_single</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">roots</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">next_id</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span>) {
+<span class="kw">fn</span> <span class="ident">init_info_single</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">roots</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">next_id</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SyntaxId</span>) {
     <span class="ident">set_parent</span>(<span class="ident">roots</span>, <span class="prelude-val">None</span>);
     <span class="ident">set_num_ancestors</span>(<span class="ident">roots</span>, <span class="number">0</span>);
-    <span class="ident">set_unique_id</span>(<span class="ident">roots</span>, <span class="ident">next_id</span>)
+    <span class="ident">set_unique_id</span>(<span class="ident">roots</span>, <span class="ident">next_id</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">set_unique_id</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">next_id</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span>) {
+<span class="kw">fn</span> <span class="ident">set_unique_id</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">next_id</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">SyntaxId</span>) {
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span> {
         <span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">unique_id</span>.<span class="ident">set</span>(<span class="kw-2">*</span><span class="ident">next_id</span>);
-        <span class="kw-2">*</span><span class="ident">next_id</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw-2">*</span><span class="ident">next_id</span> <span class="op">=</span> <span class="ident">NonZeroU32::new</span>(<span class="ident">u32::from</span>(<span class="kw-2">*</span><span class="ident">next_id</span>) <span class="op">+</span> <span class="number">1</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Should not have more than u32::MAX nodes&quot;</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">node</span> {
             <span class="ident">set_unique_id</span>(<span class="ident">children</span>, <span class="ident">next_id</span>);
+        }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">set_prev_sibling</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
+    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">node</span>) <span class="kw">in</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+        <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">continue</span>;
+        }
+
+        <span class="kw">let</span> <span class="ident">sibling</span> <span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">get</span>(<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>).<span class="ident">copied</span>();
+        <span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">previous_sibling</span>.<span class="ident">set</span>(<span class="ident">sibling</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">node</span> {
+            <span class="ident">set_prev_sibling</span>(<span class="ident">children</span>);
         }
     }
 }
@@ -1578,12 +1536,6 @@
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
-        <span class="self">self</span>.<span class="ident">content_id</span>().<span class="ident">hash</span>(<span class="ident">state</span>);
-    }
-}
-
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AtomKind</span> {
     <span class="ident">Normal</span>,
@@ -1622,16 +1574,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">MatchKind</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">first_opposite_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SingleLineSpan</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">MatchKind::UnchangedToken</span> { <span class="ident">opposite_pos</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">opposite_pos</span>.<span class="ident">first</span>().<span class="ident">copied</span>(),
-            <span class="ident">MatchKind::NovelLinePart</span> { <span class="ident">opposite_pos</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">opposite_pos</span>.<span class="ident">first</span>().<span class="ident">copied</span>(),
-            <span class="ident">MatchKind::Novel</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">MatchKind::NovelWord</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_novel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="macro">matches!</span>(
             <span class="self">self</span>,
             <span class="ident">MatchKind::Novel</span> { .. } <span class="op">|</span> <span class="ident">MatchKind::NovelWord</span> { .. } <span class="op">|</span> <span class="ident">MatchKind::NovelLinePart</span> { .. }
@@ -1690,9 +1633,9 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opposite_offset</span> <span class="op">=</span> <span class="number">0</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">for</span> <span class="ident">diff_res</span> <span class="kw">in</span> <span class="ident">diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">content_parts</span>, <span class="kw-2">&amp;</span><span class="ident">other_parts</span>) {
+    <span class="kw">for</span> <span class="ident">diff_res</span> <span class="kw">in</span> <span class="ident">myers_diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">content_parts</span>, <span class="kw-2">&amp;</span><span class="ident">other_parts</span>) {
         <span class="kw">match</span> <span class="ident">diff_res</span> {
-            <span class="ident">diff::Result::Left</span>(<span class="ident">word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Left</span>(<span class="ident">word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// This word is novel to this side.</span>
                 <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">MatchedPos</span> {
                     <span class="ident">kind</span>: <span class="ident">MatchKind::NovelWord</span> {
@@ -1706,7 +1649,7 @@
                 });
                 <span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">word</span>.<span class="ident">len</span>();
             }
-            <span class="ident">diff::Result::Both</span>(<span class="ident">word</span>, <span class="ident">opposite_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Both</span>(<span class="ident">word</span>, <span class="ident">opposite_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// This word is present on both sides.</span>
                 <span class="kw">let</span> <span class="ident">word_pos</span> <span class="op">=</span>
                     <span class="ident">content_newlines</span>.<span class="ident">from_offsets_relative_to</span>(<span class="ident">pos</span>, <span class="ident">offset</span>, <span class="ident">offset</span> <span class="op">+</span> <span class="ident">word</span>.<span class="ident">len</span>())[<span class="number">0</span>];
@@ -1727,7 +1670,7 @@
                 <span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">word</span>.<span class="ident">len</span>();
                 <span class="ident">opposite_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">opposite_word</span>.<span class="ident">len</span>();
             }
-            <span class="ident">diff::Result::Right</span>(<span class="ident">opposite_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Right</span>(<span class="ident">opposite_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// Only exists on other side, nothing to do on this side.</span>
                 <span class="ident">opposite_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">opposite_word</span>.<span class="ident">len</span>();
             }
@@ -1744,7 +1687,7 @@
         <span class="ident">pos</span>: <span class="kw-2">&amp;</span>[<span class="ident">SingleLineSpan</span>],
         <span class="ident">is_close</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ck</span> {
+        <span class="kw">match</span> <span class="ident">ck</span> {
             <span class="ident">ReplacedComment</span>(<span class="ident">this</span>, <span class="ident">opposite</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">this_content</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">this</span> {
                     <span class="ident">List</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
@@ -1757,13 +1700,13 @@
                     } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">content</span>, <span class="ident">position</span>),
                 };
 
-                <span class="kw">return</span> <span class="ident">split_comment_words</span>(
+                <span class="ident">split_comment_words</span>(
                     <span class="ident">this_content</span>,
                     <span class="comment">// TODO: handle the whole pos here.</span>
                     <span class="ident">pos</span>[<span class="number">0</span>],
                     <span class="ident">opposite_content</span>,
                     <span class="ident">opposite_pos</span>[<span class="number">0</span>],
-                );
+                )
             }
             <span class="ident">Unchanged</span>(<span class="ident">opposite</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">opposite_pos</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">opposite</span> {
@@ -1781,47 +1724,81 @@
                     <span class="ident">Atom</span> { <span class="ident">position</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">position</span>.<span class="ident">clone</span>(),
                 };
 
-                <span class="ident">MatchKind::UnchangedToken</span> {
+                <span class="kw">let</span> <span class="ident">opposite_pos_len</span> <span class="op">=</span> <span class="ident">opposite_pos</span>.<span class="ident">len</span>();
+                <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="ident">MatchKind::UnchangedToken</span> {
                     <span class="ident">highlight</span>,
                     <span class="ident">self_pos</span>: <span class="ident">pos</span>.<span class="ident">to_vec</span>(),
                     <span class="ident">opposite_pos</span>,
+                };
+
+                <span class="comment">// Create a MatchedPos for every line that `pos` covers.</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">line_pos</span>) <span class="kw">in</span> <span class="ident">pos</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+                    <span class="comment">// Don&#39;t create a MatchedPos for empty positions</span>
+                    <span class="comment">// at the start. We will want empty positions on</span>
+                    <span class="comment">// multiline atoms elsewhere, as a multline string</span>
+                    <span class="comment">// literal may include empty lines.</span>
+                    <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">line_pos</span>.<span class="ident">start_col</span> <span class="op">=</span><span class="op">=</span> <span class="ident">line_pos</span>.<span class="ident">end_col</span> {
+                        <span class="kw">continue</span>;
+                    }
+
+                    <span class="ident">res</span>.<span class="ident">push</span>(<span class="self">Self</span> {
+                        <span class="ident">kind</span>: <span class="ident">kind</span>.<span class="ident">clone</span>(),
+                        <span class="ident">pos</span>: <span class="kw-2">*</span><span class="ident">line_pos</span>,
+                    });
+
+                    <span class="comment">// Ensure we have the same number of unchanged</span>
+                    <span class="comment">// MatchedPos on the LHS and RHS. This allows us</span>
+                    <span class="comment">// to consider unchanged MatchedPos values</span>
+                    <span class="comment">// pairwise.</span>
+                    <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">opposite_pos_len</span> {
+                        <span class="kw">break</span>;
+                    }
                 }
+                <span class="ident">res</span>
             }
-            <span class="ident">Novel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MatchKind::Novel</span> { <span class="ident">highlight</span> },
-        };
+            <span class="ident">Novel</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="ident">MatchKind::Novel</span> { <span class="ident">highlight</span> };
+                <span class="comment">// Create a MatchedPos for every line that `pos` covers.</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                <span class="kw">for</span> <span class="ident">line_pos</span> <span class="kw">in</span> <span class="ident">pos</span> {
+                    <span class="comment">// Don&#39;t create a MatchedPos for empty positions. This</span>
+                    <span class="comment">// occurs when we have lists with empty open/close</span>
+                    <span class="comment">// delimiter positions, such as the top-level list of syntax items.</span>
+                    <span class="kw">if</span> <span class="ident">pos</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">line_pos</span>.<span class="ident">start_col</span> <span class="op">=</span><span class="op">=</span> <span class="ident">line_pos</span>.<span class="ident">end_col</span> {
+                        <span class="kw">continue</span>;
+                    }
 
-        <span class="comment">// Create a MatchedPos for every line that `pos` covers.</span>
-        <span class="comment">// TODO: what about opposite pos?</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">line_pos</span> <span class="kw">in</span> <span class="ident">pos</span> {
-            <span class="comment">// Don&#39;t create a MatchedPos for empty positions. This</span>
-            <span class="comment">// occurs when we have lists with empty open/close</span>
-            <span class="comment">// delimiter positions, such as the top-level list of syntax items.</span>
-            <span class="kw">if</span> <span class="ident">line_pos</span>.<span class="ident">start_col</span> <span class="op">=</span><span class="op">=</span> <span class="ident">line_pos</span>.<span class="ident">end_col</span> {
-                <span class="kw">continue</span>;
+                    <span class="ident">res</span>.<span class="ident">push</span>(<span class="self">Self</span> {
+                        <span class="ident">kind</span>: <span class="ident">kind</span>.<span class="ident">clone</span>(),
+                        <span class="ident">pos</span>: <span class="kw-2">*</span><span class="ident">line_pos</span>,
+                    });
+                }
+
+                <span class="ident">res</span>
             }
-
-            <span class="ident">res</span>.<span class="ident">push</span>(<span class="self">Self</span> {
-                <span class="ident">kind</span>: <span class="ident">kind</span>.<span class="ident">clone</span>(),
-                <span class="ident">pos</span>: <span class="kw-2">*</span><span class="ident">line_pos</span>,
-            });
         }
-
-        <span class="ident">res</span>
     }
 }
 
 <span class="doccomment">/// Walk `nodes` and return a vec of all the changed positions.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change_positions</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change_positions</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="ident">change_positions_</span>(<span class="ident">nodes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">positions</span>);
+    <span class="ident">change_positions_</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">positions</span>);
     <span class="ident">positions</span>
 }
 
-<span class="kw">fn</span> <span class="ident">change_positions_</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">positions</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">change_positions_</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">positions</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span>,
+) {
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span> {
-        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">node</span>
-            .<span class="ident">change</span>()
+        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">change_map</span>
+            .<span class="ident">get</span>(<span class="ident">node</span>)
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;Should have changes set in all nodes: {:#?}&quot;</span>, <span class="ident">node</span>));
 
         <span class="kw">match</span> <span class="ident">node</span> {
@@ -1838,7 +1815,7 @@
                     <span class="bool-val">false</span>,
                 ));
 
-                <span class="ident">change_positions_</span>(<span class="ident">children</span>, <span class="ident">positions</span>);
+                <span class="ident">change_positions_</span>(<span class="ident">children</span>, <span class="ident">change_map</span>, <span class="ident">positions</span>);
 
                 <span class="ident">positions</span>.<span class="ident">extend</span>(<span class="ident">MatchedPos::new</span>(
                     <span class="ident">change</span>,
@@ -1865,14 +1842,13 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ty</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_iter</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">iter</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_iter</span> <span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">iter</span>();
     <span class="kw">loop</span> {
-        <span class="kw">match</span> (<span class="ident">lhs</span>.<span class="ident">get</span>(<span class="ident">i</span>), <span class="ident">rhs</span>.<span class="ident">get</span>(<span class="ident">i</span>)) {
+        <span class="kw">match</span> (<span class="ident">lhs_iter</span>.<span class="ident">next</span>(), <span class="ident">rhs_iter</span>.<span class="ident">next</span>()) {
             (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
             (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">x</span>.<span class="ident">cloned</span>(), <span class="ident">y</span>.<span class="ident">cloned</span>())),
         }
-
-        <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
 
     <span class="ident">res</span>
@@ -1891,18 +1867,16 @@
     };
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_iter</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">iter</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_iter</span> <span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">iter</span>();
     <span class="kw">loop</span> {
-        <span class="kw">match</span> (<span class="ident">lhs</span>.<span class="ident">get</span>(<span class="ident">i</span>), <span class="ident">rhs</span>.<span class="ident">get</span>(<span class="ident">i</span>)) {
+        <span class="kw">match</span> (<span class="ident">lhs_iter</span>.<span class="ident">next</span>(), <span class="ident">rhs_iter</span>.<span class="ident">next</span>()) {
             (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
             (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">push</span>((
                 <span class="ident">x</span>.<span class="ident">cloned</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">lhs_last</span>.<span class="ident">clone</span>()),
                 <span class="ident">y</span>.<span class="ident">cloned</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">rhs_last</span>.<span class="ident">clone</span>()),
             )),
         }
-
-        <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
 
     <span class="ident">res</span>
@@ -2004,40 +1978,6 @@
         <span class="ident">init_all_info</span>(<span class="kw-2">&amp;</span>[<span class="ident">x</span>], <span class="kw-2">&amp;</span>[<span class="ident">y</span>]);
 
         <span class="macro">assert_eq!</span>(<span class="ident">x</span>, <span class="ident">y</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_atom_equality_ignores_change</span>() {
-        <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">Atom</span> {
-            <span class="ident">info</span>: <span class="ident">SyntaxInfo</span> {
-                <span class="ident">change</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">Some</span>(<span class="ident">Novel</span>)),
-                ..<span class="ident">SyntaxInfo::default</span>()
-            },
-
-            <span class="ident">position</span>: <span class="macro">vec!</span>[<span class="ident">SingleLineSpan</span> {
-                <span class="ident">line</span>: <span class="number">1</span>.<span class="ident">into</span>(),
-                <span class="ident">start_col</span>: <span class="number">2</span>,
-                <span class="ident">end_col</span>: <span class="number">3</span>,
-            }],
-            <span class="ident">content</span>: <span class="string">&quot;foo&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">kind</span>: <span class="ident">AtomKind::Normal</span>,
-        };
-        <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">Atom</span> {
-            <span class="ident">info</span>: <span class="ident">SyntaxInfo</span> {
-                <span class="ident">change</span>: <span class="ident">Cell::new</span>(<span class="prelude-val">None</span>),
-                ..<span class="ident">SyntaxInfo::default</span>()
-            },
-            <span class="ident">position</span>: <span class="macro">vec!</span>[<span class="ident">SingleLineSpan</span> {
-                <span class="ident">line</span>: <span class="number">1</span>.<span class="ident">into</span>(),
-                <span class="ident">start_col</span>: <span class="number">2</span>,
-                <span class="ident">end_col</span>: <span class="number">3</span>,
-            }],
-            <span class="ident">content</span>: <span class="string">&quot;foo&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">kind</span>: <span class="ident">AtomKind::Normal</span>,
-        };
-        <span class="ident">init_all_info</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">lhs</span>], <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">rhs</span>]);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

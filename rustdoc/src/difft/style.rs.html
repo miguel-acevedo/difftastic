@@ -445,10 +445,50 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Apply colours and styling to strings.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">lines</span>::{<span class="ident">codepoint_len</span>, <span class="ident">LineNumber</span>},
+    <span class="ident">constants::Side</span>,
+    <span class="ident">lines</span>::{<span class="ident">byte_len</span>, <span class="ident">codepoint_len</span>, <span class="ident">LineNumber</span>},
     <span class="ident">positions::SingleLineSpan</span>,
     <span class="ident">syntax</span>::{<span class="ident">AtomKind</span>, <span class="ident">MatchKind</span>, <span class="ident">MatchedPos</span>, <span class="ident">TokenKind</span>},
 };
@@ -491,13 +531,17 @@
     }
 }
 
+<span class="kw">fn</span> <span class="ident">substring_by_byte</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">end</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">str</span> {
+    <span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="ident">start</span>..<span class="ident">end</span>]
+}
+
 <span class="doccomment">/// Split a string into equal length parts, padding the last part if</span>
 <span class="doccomment">/// necessary.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// split_string(&quot;fooba&quot;, 3) // vec![&quot;foo&quot;, &quot;ba &quot;]</span>
+<span class="doccomment">/// split_string_by_codepoint(&quot;fooba&quot;, 3) // vec![&quot;foo&quot;, &quot;ba &quot;]</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">fn</span> <span class="ident">split_string</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">max_len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">split_string_by_codepoint</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">max_len</span>: <span class="ident">usize</span>, <span class="ident">pad_last</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">s</span>;
 
@@ -507,7 +551,11 @@
     }
 
     <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">res</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{:width$}&quot;</span>, <span class="ident">s</span>, <span class="ident">width</span> <span class="op">=</span> <span class="ident">max_len</span>));
+        <span class="kw">if</span> <span class="ident">pad_last</span> {
+            <span class="ident">res</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{:width$}&quot;</span>, <span class="ident">s</span>, <span class="ident">width</span> <span class="op">=</span> <span class="ident">max_len</span>));
+        } <span class="kw">else</span> {
+            <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">s</span>.<span class="ident">to_string</span>());
+        }
     }
 
     <span class="ident">res</span>
@@ -525,10 +573,11 @@
     <span class="ident">max_len</span>: <span class="ident">usize</span>,
     <span class="ident">use_color</span>: <span class="ident">bool</span>,
     <span class="ident">styles</span>: <span class="kw-2">&amp;</span>[(<span class="ident">SingleLineSpan</span>, <span class="ident">Style</span>)],
+    <span class="ident">side</span>: <span class="ident">Side</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">styles</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">line</span>.<span class="ident">is_empty</span>() {
+    <span class="kw">if</span> <span class="ident">styles</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">line</span>.<span class="ident">trim</span>().<span class="ident">is_empty</span>() {
         <span class="comment">// Missing styles is a bug, so highlight in purple to make this obvious.</span>
-        <span class="kw">return</span> <span class="ident">split_string</span>(<span class="ident">line</span>, <span class="ident">max_len</span>)
+        <span class="kw">return</span> <span class="ident">split_string_by_codepoint</span>(<span class="ident">line</span>, <span class="ident">max_len</span>, <span class="macro">matches!</span>(<span class="ident">side</span>, <span class="ident">Side::Left</span>))
             .<span class="ident">into_iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">part</span><span class="op">|</span> {
                 <span class="kw">if</span> <span class="ident">use_color</span> {
@@ -543,12 +592,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">styled_parts</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">part_start</span> <span class="op">=</span> <span class="number">0</span>;
 
-    <span class="kw">for</span> <span class="ident">part</span> <span class="kw">in</span> <span class="ident">split_string</span>(<span class="ident">line</span>, <span class="ident">max_len</span>) {
+    <span class="kw">for</span> <span class="ident">part</span> <span class="kw">in</span> <span class="ident">split_string_by_codepoint</span>(<span class="ident">line</span>, <span class="ident">max_len</span>, <span class="macro">matches!</span>(<span class="ident">side</span>, <span class="ident">Side::Left</span>)) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">part</span>.<span class="ident">len</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev_style_end</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">for</span> (<span class="ident">span</span>, <span class="ident">style</span>) <span class="kw">in</span> <span class="ident">styles</span> {
             <span class="comment">// The remaining spans are beyond the end of this part.</span>
-            <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">part_start</span> <span class="op">+</span> <span class="ident">codepoint_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>) {
+            <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">part_start</span> <span class="op">+</span> <span class="ident">byte_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>) {
                 <span class="kw">break</span>;
             }
 
@@ -556,7 +605,7 @@
             <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">&gt;</span> <span class="ident">part_start</span> <span class="op">&amp;&amp;</span> <span class="ident">prev_style_end</span> <span class="op">&lt;</span> <span class="ident">span</span>.<span class="ident">start_col</span> {
                 <span class="comment">// Then append that text without styling.</span>
                 <span class="kw">let</span> <span class="ident">unstyled_start</span> <span class="op">=</span> <span class="ident">max</span>(<span class="ident">prev_style_end</span>, <span class="ident">part_start</span>);
-                <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">substring_by_codepoint</span>(
+                <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">substring_by_byte</span>(
                     <span class="kw-2">&amp;</span><span class="ident">part</span>,
                     <span class="ident">unstyled_start</span> <span class="op">-</span> <span class="ident">part_start</span>,
                     <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">-</span> <span class="ident">part_start</span>,
@@ -565,10 +614,10 @@
 
             <span class="comment">// Apply style to the substring in this span.</span>
             <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">end_col</span> <span class="op">&gt;</span> <span class="ident">part_start</span> {
-                <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_codepoint</span>(
+                <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_byte</span>(
                     <span class="kw-2">&amp;</span><span class="ident">part</span>,
                     <span class="ident">max</span>(<span class="number">0</span>, <span class="ident">span</span>.<span class="ident">start_col</span> <span class="kw">as</span> <span class="ident">isize</span> <span class="op">-</span> <span class="ident">part_start</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="kw">as</span> <span class="ident">usize</span>,
-                    <span class="ident">min</span>(<span class="ident">codepoint_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>), <span class="ident">span</span>.<span class="ident">end_col</span> <span class="op">-</span> <span class="ident">part_start</span>),
+                    <span class="ident">min</span>(<span class="ident">byte_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>), <span class="ident">span</span>.<span class="ident">end_col</span> <span class="op">-</span> <span class="ident">part_start</span>),
                 );
                 <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="kw-2">&amp;</span><span class="ident">span_s</span>.<span class="ident">style</span>(<span class="kw-2">*</span><span class="ident">style</span>).<span class="ident">to_string</span>());
             }
@@ -583,13 +632,12 @@
 
         <span class="comment">// Unstyled text after the last span.</span>
         <span class="kw">if</span> <span class="ident">prev_style_end</span> <span class="op">&lt;</span> <span class="ident">part_start</span> <span class="op">+</span> <span class="ident">codepoint_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>) {
-            <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span>
-                <span class="ident">substring_by_codepoint</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>, <span class="ident">prev_style_end</span> <span class="op">-</span> <span class="ident">part_start</span>, <span class="ident">codepoint_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>));
+            <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_byte</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>, <span class="ident">prev_style_end</span> <span class="op">-</span> <span class="ident">part_start</span>, <span class="ident">byte_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>));
             <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">span_s</span>);
         }
 
         <span class="ident">styled_parts</span>.<span class="ident">push</span>(<span class="ident">res</span>);
-        <span class="ident">part_start</span> <span class="op">+</span><span class="op">=</span> <span class="ident">codepoint_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>)
+        <span class="ident">part_start</span> <span class="op">+</span><span class="op">=</span> <span class="ident">byte_len</span>(<span class="kw-2">&amp;</span><span class="ident">part</span>);
     }
 
     <span class="ident">styled_parts</span>
@@ -602,31 +650,30 @@
         <span class="kw">return</span> <span class="ident">highlight_missing_style_bug</span>(<span class="ident">line</span>);
     }
 
-    <span class="kw">let</span> <span class="ident">line_codepoints</span> <span class="op">=</span> <span class="ident">codepoint_len</span>(<span class="ident">line</span>);
+    <span class="kw">let</span> <span class="ident">line_bytes</span> <span class="op">=</span> <span class="ident">byte_len</span>(<span class="ident">line</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">line</span>.<span class="ident">len</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">for</span> (<span class="ident">span</span>, <span class="ident">style</span>) <span class="kw">in</span> <span class="ident">styles</span> {
         <span class="comment">// The remaining spans are beyond the end of this line. This</span>
         <span class="comment">// occurs when we truncate the line to fit on the display.</span>
-        <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">line_codepoints</span> {
+        <span class="kw">if</span> <span class="ident">span</span>.<span class="ident">start_col</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">line_bytes</span> {
             <span class="kw">break</span>;
         }
 
         <span class="comment">// Unstyled text before the next span.</span>
         <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">span</span>.<span class="ident">start_col</span> {
-            <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">substring_by_codepoint</span>(<span class="ident">line</span>, <span class="ident">i</span>, <span class="ident">span</span>.<span class="ident">start_col</span>));
+            <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">substring_by_byte</span>(<span class="ident">line</span>, <span class="ident">i</span>, <span class="ident">span</span>.<span class="ident">start_col</span>));
         }
 
         <span class="comment">// Apply style to the substring in this span.</span>
-        <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span>
-            <span class="ident">substring_by_codepoint</span>(<span class="ident">line</span>, <span class="ident">span</span>.<span class="ident">start_col</span>, <span class="ident">min</span>(<span class="ident">line_codepoints</span>, <span class="ident">span</span>.<span class="ident">end_col</span>));
+        <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_byte</span>(<span class="ident">line</span>, <span class="ident">span</span>.<span class="ident">start_col</span>, <span class="ident">min</span>(<span class="ident">line_bytes</span>, <span class="ident">span</span>.<span class="ident">end_col</span>));
         <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="kw-2">&amp;</span><span class="ident">span_s</span>.<span class="ident">style</span>(<span class="kw-2">*</span><span class="ident">style</span>).<span class="ident">to_string</span>());
         <span class="ident">i</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">end_col</span>;
     }
 
     <span class="comment">// Unstyled text after the last span.</span>
-    <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">line_codepoints</span> {
-        <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_codepoint</span>(<span class="ident">line</span>, <span class="ident">i</span>, <span class="ident">line_codepoints</span>);
+    <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">line_bytes</span> {
+        <span class="kw">let</span> <span class="ident">span_s</span> <span class="op">=</span> <span class="ident">substring_by_byte</span>(<span class="ident">line</span>, <span class="ident">i</span>, <span class="ident">line_bytes</span>);
         <span class="ident">res</span>.<span class="ident">push_str</span>(<span class="ident">span_s</span>);
     }
     <span class="ident">res</span>
@@ -681,6 +728,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">color_positions</span>(
     <span class="ident">is_lhs</span>: <span class="ident">bool</span>,
     <span class="ident">background</span>: <span class="ident">BackgroundColor</span>,
+    <span class="ident">syntax_highlight</span>: <span class="ident">bool</span>,
     <span class="ident">positions</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>],
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">SingleLineSpan</span>, <span class="ident">Style</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">styles</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -688,39 +736,43 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">style</span> <span class="op">=</span> <span class="ident">Style::new</span>();
         <span class="kw">match</span> <span class="ident">pos</span>.<span class="ident">kind</span> {
             <span class="ident">MatchKind::UnchangedToken</span> { <span class="ident">highlight</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">atom_kind</span>) <span class="op">=</span> <span class="ident">highlight</span> {
-                    <span class="kw">match</span> <span class="ident">atom_kind</span> {
-                        <span class="ident">AtomKind::String</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">style</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">background</span>.<span class="ident">is_dark</span>() {
-                                <span class="ident">style</span>.<span class="ident">bright_magenta</span>()
-                            } <span class="kw">else</span> {
-                                <span class="ident">style</span>.<span class="ident">magenta</span>()
-                            };
+                <span class="kw">if</span> <span class="ident">syntax_highlight</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">atom_kind</span>) <span class="op">=</span> <span class="ident">highlight</span> {
+                        <span class="kw">match</span> <span class="ident">atom_kind</span> {
+                            <span class="ident">AtomKind::String</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">style</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">background</span>.<span class="ident">is_dark</span>() {
+                                    <span class="ident">style</span>.<span class="ident">bright_magenta</span>()
+                                } <span class="kw">else</span> {
+                                    <span class="ident">style</span>.<span class="ident">magenta</span>()
+                                };
+                            }
+                            <span class="ident">AtomKind::Comment</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
+                                <span class="ident">style</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">background</span>.<span class="ident">is_dark</span>() {
+                                    <span class="ident">style</span>.<span class="ident">bright_blue</span>()
+                                } <span class="kw">else</span> {
+                                    <span class="ident">style</span>.<span class="ident">blue</span>()
+                                };
+                            }
+                            <span class="ident">AtomKind::Keyword</span> <span class="op">|</span> <span class="ident">AtomKind::Type</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">bold</span>();
+                            }
+                            <span class="ident">AtomKind::Normal</span> <span class="op">=</span><span class="op">&gt;</span> {}
                         }
-                        <span class="ident">AtomKind::Comment</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
-                            <span class="ident">style</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">background</span>.<span class="ident">is_dark</span>() {
-                                <span class="ident">style</span>.<span class="ident">bright_blue</span>()
-                            } <span class="kw">else</span> {
-                                <span class="ident">style</span>.<span class="ident">blue</span>()
-                            };
-                        }
-                        <span class="ident">AtomKind::Keyword</span> <span class="op">|</span> <span class="ident">AtomKind::Type</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">bold</span>();
-                        }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
                     }
                 }
             }
             <span class="ident">MatchKind::Novel</span> { <span class="ident">highlight</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">style</span> <span class="op">=</span> <span class="ident">novel_style</span>(<span class="ident">style</span>, <span class="ident">is_lhs</span>, <span class="ident">background</span>);
-                <span class="kw">if</span> <span class="macro">matches!</span>(
-                    <span class="ident">highlight</span>,
-                    <span class="ident">TokenKind::Delimiter</span>
-                        <span class="op">|</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Keyword</span>)
-                        <span class="op">|</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Type</span>)
-                ) {
-                    <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">bold</span>();
+                <span class="kw">if</span> <span class="ident">syntax_highlight</span> {
+                    <span class="kw">if</span> <span class="macro">matches!</span>(
+                        <span class="ident">highlight</span>,
+                        <span class="ident">TokenKind::Delimiter</span>
+                            <span class="op">|</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Keyword</span>)
+                            <span class="op">|</span> <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Type</span>)
+                    ) {
+                        <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">bold</span>();
+                    }
                 }
                 <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">highlight</span>, <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Comment</span>)) {
                     <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
@@ -728,14 +780,18 @@
             }
             <span class="ident">MatchKind::NovelWord</span> { <span class="ident">highlight</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">style</span> <span class="op">=</span> <span class="ident">novel_style</span>(<span class="ident">style</span>, <span class="ident">is_lhs</span>, <span class="ident">background</span>).<span class="ident">bold</span>();
-                <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">highlight</span>, <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Comment</span>)) {
-                    <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
+                <span class="kw">if</span> <span class="ident">syntax_highlight</span> {
+                    <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">highlight</span>, <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Comment</span>)) {
+                        <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
+                    }
                 }
             }
             <span class="ident">MatchKind::NovelLinePart</span> { <span class="ident">highlight</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">style</span> <span class="op">=</span> <span class="ident">novel_style</span>(<span class="ident">style</span>, <span class="ident">is_lhs</span>, <span class="ident">background</span>);
-                <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">highlight</span>, <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Comment</span>)) {
-                    <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
+                <span class="kw">if</span> <span class="ident">syntax_highlight</span> {
+                    <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">highlight</span>, <span class="ident">TokenKind::Atom</span>(<span class="ident">AtomKind::Comment</span>)) {
+                        <span class="ident">style</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">italic</span>();
+                    }
                 }
             }
         };
@@ -747,10 +803,11 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_colors</span>(
     <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     <span class="ident">is_lhs</span>: <span class="ident">bool</span>,
+    <span class="ident">syntax_highlight</span>: <span class="ident">bool</span>,
     <span class="ident">background</span>: <span class="ident">BackgroundColor</span>,
     <span class="ident">positions</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>],
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="ident">styles</span> <span class="op">=</span> <span class="ident">color_positions</span>(<span class="ident">is_lhs</span>, <span class="ident">background</span>, <span class="ident">positions</span>);
+    <span class="kw">let</span> <span class="ident">styles</span> <span class="op">=</span> <span class="ident">color_positions</span>(<span class="ident">is_lhs</span>, <span class="ident">background</span>, <span class="ident">syntax_highlight</span>, <span class="ident">positions</span>);
     <span class="ident">apply</span>(<span class="ident">s</span>, <span class="kw-2">&amp;</span><span class="ident">styles</span>)
 }
 
@@ -773,10 +830,13 @@
     } <span class="kw">else</span> {
         <span class="ident">file_name</span>.<span class="ident">to_string</span>()
     };
-    <span class="macro">format!</span>(
-        <span class="string">&quot;{} --- {}/{} --- {}&quot;</span>,
-        <span class="ident">file_name_pretty</span>, <span class="ident">hunk_num</span>, <span class="ident">hunk_total</span>, <span class="ident">language_name</span>
-    )
+    <span class="kw">let</span> <span class="ident">divider</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">hunk_total</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+        <span class="string">&quot;&quot;</span>.<span class="ident">to_owned</span>()
+    } <span class="kw">else</span> {
+        <span class="macro">format!</span>(<span class="string">&quot;{}/{} --- &quot;</span>, <span class="ident">hunk_num</span>, <span class="ident">hunk_total</span>)
+    };
+
+    <span class="macro">format!</span>(<span class="string">&quot;{} --- {}{}&quot;</span>, <span class="ident">file_name_pretty</span>, <span class="ident">divider</span>, <span class="ident">language_name</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -796,17 +856,31 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">split_string_simple</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">split_string</span>(<span class="string">&quot;fooba&quot;</span>, <span class="number">3</span>), <span class="macro">vec!</span>[<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;ba &quot;</span>]);
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">split_string_by_codepoint</span>(<span class="string">&quot;fooba&quot;</span>, <span class="number">3</span>, <span class="bool-val">true</span>),
+            <span class="macro">vec!</span>[<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;ba &quot;</span>]
+        );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">split_string_simple_no_pad</span>() {
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">split_string_by_codepoint</span>(<span class="string">&quot;fooba&quot;</span>, <span class="number">3</span>, <span class="bool-val">false</span>),
+            <span class="macro">vec!</span>[<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;ba&quot;</span>]
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">split_string_unicode</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">split_string</span>(<span class="string">&quot;ab📦def&quot;</span>, <span class="number">3</span>), <span class="macro">vec!</span>[<span class="string">&quot;ab📦&quot;</span>, <span class="string">&quot;def&quot;</span>]);
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">split_string_by_codepoint</span>(<span class="string">&quot;ab📦def&quot;</span>, <span class="number">3</span>, <span class="bool-val">true</span>),
+            <span class="macro">vec!</span>[<span class="string">&quot;ab📦&quot;</span>, <span class="string">&quot;def&quot;</span>]
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_split_and_apply_missing</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">split_and_apply</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">3</span>, <span class="bool-val">true</span>, <span class="kw-2">&amp;</span>[]);
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">split_and_apply</span>(<span class="string">&quot;foo&quot;</span>, <span class="number">3</span>, <span class="bool-val">true</span>, <span class="kw-2">&amp;</span>[], <span class="ident">Side::Left</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="ident">highlight_missing_style_bug</span>(<span class="string">&quot;foo&quot;</span>)])
     }
 
@@ -824,6 +898,7 @@
                 },
                 <span class="ident">Style::new</span>(),
             )],
+            <span class="ident">Side::Left</span>,
         );
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="string">&quot;foo&quot;</span>])
     }
@@ -842,6 +917,7 @@
                 },
                 <span class="ident">Style::new</span>(),
             )],
+            <span class="ident">Side::Left</span>,
         );
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="string">&quot;foobar&quot;</span>])
     }
@@ -870,6 +946,7 @@
                     <span class="ident">Style::new</span>(),
                 ),
             ],
+            <span class="ident">Side::Left</span>,
         );
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;bar&quot;</span>])
     }
@@ -888,6 +965,7 @@
                 },
                 <span class="ident">Style::new</span>(),
             )],
+            <span class="ident">Side::Left</span>,
         );
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="string">&quot;foobar&quot;</span>, <span class="string">&quot;      &quot;</span>])
     }

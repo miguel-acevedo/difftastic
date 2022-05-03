@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["mark_syntax",""],["node_count",""],["shortest_path",""]],"type":[["PredecessorInfo",""]]});
+initSidebarItems({"fn":[["mark_syntax",""],["node_count","What is the total number of AST nodes?"],["shortest_path",""],["tree_count","How many top-level AST nodes do we have?"]],"type":[["PredecessorInfo",""]]});

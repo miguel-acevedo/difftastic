@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["eprint_read_error",""],["is_probably_binary","Do these bytes look like a binary (non-textual) format?"],["read_files_or_die",""],["read_or_die",""]]});
+initSidebarItems({"fn":[["eprint_read_error",""],["is_probably_binary","Do these bytes look like a binary (non-textual) format?"],["read_files_or_die",""],["read_or_die",""],["relative_file_paths_in_dir","All the files in `dir`, including subdirectories."],["relative_paths_in_either","Walk `lhs_dir` and `rhs_dir`, and return relative paths of files that occur in at least one directory."]]});

@@ -465,6 +465,148 @@
 <span id="465">465</span>
 <span id="466">466</span>
 <span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Prefer contiguous novel nodes on the same line.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A slider takes the following form:</span>
@@ -497,45 +639,174 @@
 <span class="doccomment">//! (B in this example).</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">changes</span>::{<span class="ident">insert_deep_novel</span>, <span class="ident">insert_deep_unchanged</span>, <span class="ident">ChangeKind</span>::<span class="kw-2">*</span>, <span class="ident">ChangeMap</span>},
+    <span class="ident">guess_language</span>,
     <span class="ident">positions::SingleLineSpan</span>,
-    <span class="ident">syntax</span>::{<span class="ident">ChangeKind</span>::<span class="kw-2">*</span>, <span class="ident">Syntax</span>},
+    <span class="ident">syntax::Syntax</span>,
 };
 <span class="kw">use</span> <span class="ident">Syntax</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fix_all_sliders</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fix_all_sliders</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">language</span>: <span class="ident">guess_language::Language</span>,
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) {
     <span class="comment">// TODO: fix sliders that require more than two steps.</span>
-    <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">nodes</span>);
-    <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">nodes</span>);
+    <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>);
+    <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>);
+
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">prefer_outer_delimiter</span>(<span class="ident">language</span>) {
+        <span class="ident">fix_all_nested_sliders</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>);
+    }
 }
 
-<span class="kw">fn</span> <span class="ident">fix_all_sliders_one_step</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
+<span class="doccomment">/// Should nester slider correction prefer the inner or outer</span>
+<span class="doccomment">/// delimiter?</span>
+<span class="kw">fn</span> <span class="ident">prefer_outer_delimiter</span>(<span class="ident">language</span>: <span class="ident">guess_language::Language</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">use</span> <span class="ident">guess_language::Language</span>::<span class="kw-2">*</span>;
+    <span class="kw">match</span> <span class="ident">language</span> {
+        <span class="comment">// For Lisp family languages, we get the best result with the</span>
+        <span class="comment">// outer delimiter.</span>
+        <span class="ident">EmacsLisp</span> <span class="op">|</span> <span class="ident">Clojure</span> <span class="op">|</span> <span class="ident">CommonLisp</span> <span class="op">|</span> <span class="ident">Janet</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="comment">// JSON and TOML are like Lisp: the outer delimiter in an array object</span>
+        <span class="comment">// is the most relevant.</span>
+        <span class="ident">Json</span> <span class="op">|</span> <span class="ident">Toml</span> <span class="op">|</span> <span class="ident">Hcl</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="comment">// For everything else, prefer the inner delimiter. These</span>
+        <span class="comment">// languages have syntax like `foo(bar)` or `foo[bar]` where</span>
+        <span class="comment">// the inner delimiter is more relevant.</span>
+        <span class="ident">Bash</span> <span class="op">|</span> <span class="ident">C</span> <span class="op">|</span> <span class="ident">CPlusPlus</span> <span class="op">|</span> <span class="ident">CSharp</span> <span class="op">|</span> <span class="ident">Css</span> <span class="op">|</span> <span class="ident">Dart</span> <span class="op">|</span> <span class="ident">Elixir</span> <span class="op">|</span> <span class="ident">Elm</span> <span class="op">|</span> <span class="ident">Gleam</span> <span class="op">|</span> <span class="ident">Go</span> <span class="op">|</span> <span class="ident">Haskell</span> <span class="op">|</span> <span class="ident">Java</span>
+        <span class="op">|</span> <span class="ident">JavaScript</span> <span class="op">|</span> <span class="ident">Jsx</span> <span class="op">|</span> <span class="ident">Kotlin</span> <span class="op">|</span> <span class="ident">Lua</span> <span class="op">|</span> <span class="ident">Nix</span> <span class="op">|</span> <span class="ident">OCaml</span> <span class="op">|</span> <span class="ident">OCamlInterface</span> <span class="op">|</span> <span class="ident">Perl</span> <span class="op">|</span> <span class="ident">Php</span> <span class="op">|</span> <span class="ident">Python</span>
+        <span class="op">|</span> <span class="ident">Ruby</span> <span class="op">|</span> <span class="ident">Rust</span> <span class="op">|</span> <span class="ident">Scala</span> <span class="op">|</span> <span class="ident">Swift</span> <span class="op">|</span> <span class="ident">Tsx</span> <span class="op">|</span> <span class="ident">TypeScript</span> <span class="op">|</span> <span class="ident">Yaml</span> <span class="op">|</span> <span class="ident">Zig</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">fix_all_sliders_one_step</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">node</span> {
-            <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">children</span>);
+            <span class="ident">fix_all_sliders_one_step</span>(<span class="ident">children</span>, <span class="ident">change_map</span>);
         }
     }
-    <span class="ident">fix_sliders</span>(<span class="ident">nodes</span>);
+    <span class="ident">fix_sliders</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">fix_sliders</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) {
-    <span class="kw">for</span> (<span class="ident">region_start</span>, <span class="ident">region_end</span>) <span class="kw">in</span> <span class="ident">novel_regions_after_unchanged</span>(<span class="ident">nodes</span>) {
-        <span class="ident">slide_to_prev_node</span>(<span class="ident">nodes</span>, <span class="ident">region_start</span>, <span class="ident">region_end</span>);
-    }
-    <span class="kw">for</span> (<span class="ident">region_start</span>, <span class="ident">region_end</span>) <span class="kw">in</span> <span class="ident">novel_regions_before_unchanged</span>(<span class="ident">nodes</span>) {
-        <span class="ident">slide_to_next_node</span>(<span class="ident">nodes</span>, <span class="ident">region_start</span>, <span class="ident">region_end</span>);
+<span class="doccomment">/// Correct sliders in middle insertions.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Consider the code:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```text</span>
+<span class="doccomment">/// // Before</span>
+<span class="doccomment">/// old1(old2);</span>
+<span class="doccomment">/// // After</span>
+<span class="doccomment">/// old1(new1(old2));</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Tree diffing has two possible solution here. Either we&#39;ve added</span>
+<span class="doccomment">/// `new1(...)` or we&#39;ve added `(new1...)`. Both are valid.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// For C-like languages, the first case matches human intuition much</span>
+<span class="doccomment">/// better. Fix the slider to make the inner delimiter novel.</span>
+<span class="kw">fn</span> <span class="ident">fix_all_nested_sliders</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
+    <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span> {
+        <span class="ident">fix_nested_slider</span>(<span class="ident">node</span>, <span class="ident">change_map</span>);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">novel_regions_after_unchanged</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Syntax</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">fix_nested_slider</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">node</span> {
+        <span class="kw">match</span> <span class="ident">change_map</span>
+            .<span class="ident">get</span>(<span class="ident">node</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Changes should be set before slider correction&quot;</span>)
+        {
+            <span class="ident">Unchanged</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
+                    <span class="ident">fix_nested_slider</span>(<span class="ident">child</span>, <span class="ident">change_map</span>);
+                }
+            }
+            <span class="ident">ReplacedComment</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">Novel</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">found_unchanged</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
+                    <span class="ident">unchanged_descendants</span>(<span class="ident">child</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">found_unchanged</span>, <span class="ident">change_map</span>);
+                }
+
+                <span class="kw">if</span> <span class="kw">let</span> [<span class="ident">List</span> { .. }] <span class="op">=</span> <span class="ident">found_unchanged</span>[..] {
+                    <span class="ident">push_unchanged_to_ancestor</span>(<span class="ident">node</span>, <span class="ident">found_unchanged</span>[<span class="number">0</span>], <span class="ident">change_map</span>);
+                }
+            }
+        }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">unchanged_descendants</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">found</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) {
+    <span class="kw">if</span> <span class="ident">found</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">match</span> <span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>).<span class="ident">unwrap</span>() {
+        <span class="ident">Unchanged</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">found</span>.<span class="ident">push</span>(<span class="ident">node</span>);
+        }
+        <span class="ident">Novel</span> <span class="op">|</span> <span class="ident">ReplacedComment</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">node</span> {
+                <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
+                    <span class="ident">unchanged_descendants</span>(<span class="ident">child</span>, <span class="ident">found</span>, <span class="ident">change_map</span>);
+                }
+            }
+        }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">push_unchanged_to_ancestor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">root</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) {
+    <span class="kw">let</span> <span class="ident">inner_change</span> <span class="op">=</span> <span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">inner</span>).<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">delimiters_match</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">root</span>, <span class="ident">inner</span>) {
+        (
+            <span class="ident">List</span> {
+                <span class="ident">open_content</span>: <span class="ident">root_open</span>,
+                <span class="ident">close_content</span>: <span class="ident">root_close</span>,
+                ..
+            },
+            <span class="ident">List</span> {
+                <span class="ident">open_content</span>: <span class="ident">inner_open</span>,
+                <span class="ident">close_content</span>: <span class="ident">inner_close</span>,
+                ..
+            },
+        ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">root_open</span> <span class="op">=</span><span class="op">=</span> <span class="ident">inner_open</span> <span class="op">&amp;&amp;</span> <span class="ident">root_close</span> <span class="op">=</span><span class="op">=</span> <span class="ident">inner_close</span>,
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+    };
+
+    <span class="kw">if</span> <span class="ident">delimiters_match</span> {
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">root</span>, <span class="ident">inner_change</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">inner</span>, <span class="ident">Novel</span>);
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">fix_sliders</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>], <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
+    <span class="kw">for</span> (<span class="ident">region_start</span>, <span class="ident">region_end</span>) <span class="kw">in</span> <span class="ident">novel_regions_after_unchanged</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>) {
+        <span class="ident">slide_to_prev_node</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>, <span class="ident">region_start</span>, <span class="ident">region_end</span>);
+    }
+    <span class="kw">for</span> (<span class="ident">region_start</span>, <span class="ident">region_end</span>) <span class="kw">in</span> <span class="ident">novel_regions_before_unchanged</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>) {
+        <span class="ident">slide_to_next_node</span>(<span class="ident">nodes</span>, <span class="ident">change_map</span>, <span class="ident">region_start</span>, <span class="ident">region_end</span>);
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">novel_regions_after_unchanged</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">regions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">region</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
     <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">node</span>) <span class="kw">in</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">node</span>
-            .<span class="ident">info</span>()
-            .<span class="ident">change</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>);
+        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>).<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>);
 
         <span class="kw">match</span> <span class="ident">change</span> {
             <span class="ident">Unchanged</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -575,16 +846,15 @@
         .<span class="ident">collect</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">novel_regions_before_unchanged</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Syntax</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">novel_regions_before_unchanged</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">regions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">region</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
     <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">node</span>) <span class="kw">in</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">node</span>
-            .<span class="ident">info</span>()
-            .<span class="ident">change</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>);
+        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>).<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>);
 
         <span class="kw">match</span> <span class="ident">change</span> {
             <span class="ident">Unchanged</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -613,43 +883,48 @@
         .<span class="ident">collect</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">is_novel_deep</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">Syntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_novel_deep</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">node</span> {
-        <span class="ident">List</span> { <span class="ident">info</span>, <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>)) {
+        <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>)) {
                 <span class="kw">return</span> <span class="bool-val">false</span>;
             }
             <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">child</span>) {
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">child</span>, <span class="ident">change_map</span>) {
                     <span class="kw">return</span> <span class="bool-val">false</span>;
                 }
             }
 
             <span class="bool-val">true</span>
         }
-        <span class="ident">Atom</span> { <span class="ident">info</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(<span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>)),
+        <span class="ident">Atom</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>)),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">is_unchanged_deep</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">Syntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">is_unchanged_deep</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">node</span> {
-        <span class="ident">List</span> { <span class="ident">info</span>, <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>(), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="kw">_</span>))) {
+        <span class="ident">List</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="kw">_</span>))) {
                 <span class="kw">return</span> <span class="bool-val">false</span>;
             }
             <span class="kw">for</span> <span class="ident">child</span> <span class="kw">in</span> <span class="ident">children</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">child</span>) {
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">child</span>, <span class="ident">change_map</span>) {
                     <span class="kw">return</span> <span class="bool-val">false</span>;
                 }
             }
 
             <span class="bool-val">true</span>
         }
-        <span class="ident">Atom</span> { <span class="ident">info</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(<span class="ident">info</span>.<span class="ident">change</span>.<span class="ident">get</span>(), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="kw">_</span>))),
+        <span class="ident">Atom</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">node</span>), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="kw">_</span>))),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">slide_to_prev_node</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Syntax</span>], <span class="ident">start_idx</span>: <span class="ident">usize</span>, <span class="ident">end_idx</span>: <span class="ident">usize</span>) {
+<span class="kw">fn</span> <span class="ident">slide_to_prev_node</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">start_idx</span>: <span class="ident">usize</span>,
+    <span class="ident">end_idx</span>: <span class="ident">usize</span>,
+) {
     <span class="kw">if</span> <span class="ident">start_idx</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span>;
     }
@@ -671,31 +946,35 @@
 
     <span class="kw">if</span> <span class="ident">distance_to_before_start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">distance_to_last</span> {
         <span class="comment">// Deep checks walk the whole tree, so do these last.</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">before_start_node</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">before_start_node</span>, <span class="ident">change_map</span>) {
             <span class="kw">return</span>;
         }
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">nodes</span>[<span class="ident">start_idx</span>..<span class="op">=</span><span class="ident">end_idx</span>] {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">node</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">node</span>, <span class="ident">change_map</span>) {
                 <span class="kw">return</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">opposite</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">before_start_node</span>
-            .<span class="ident">info</span>()
-            .<span class="ident">change</span>
-            .<span class="ident">get</span>()
+        <span class="kw">let</span> <span class="ident">opposite</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">change_map</span>
+            .<span class="ident">get</span>(<span class="ident">before_start_node</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>)
         {
             <span class="ident">Unchanged</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
         };
 
-        <span class="ident">before_start_node</span>.<span class="ident">set_change_deep</span>(<span class="ident">Novel</span>);
-        <span class="ident">last_node</span>.<span class="ident">set_change_deep</span>(<span class="ident">Unchanged</span>(<span class="ident">opposite</span>));
+        <span class="ident">insert_deep_novel</span>(<span class="ident">before_start_node</span>, <span class="ident">change_map</span>);
+        <span class="ident">insert_deep_unchanged</span>(<span class="ident">last_node</span>, <span class="kw-2">&amp;</span><span class="ident">opposite</span>, <span class="ident">change_map</span>);
+        <span class="ident">insert_deep_unchanged</span>(<span class="kw-2">&amp;</span><span class="ident">opposite</span>, <span class="ident">last_node</span>, <span class="ident">change_map</span>);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">slide_to_next_node</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Syntax</span>], <span class="ident">start_idx</span>: <span class="ident">usize</span>, <span class="ident">end_idx</span>: <span class="ident">usize</span>) {
+<span class="kw">fn</span> <span class="ident">slide_to_next_node</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">start_idx</span>: <span class="ident">usize</span>,
+    <span class="ident">end_idx</span>: <span class="ident">usize</span>,
+) {
     <span class="kw">if</span> <span class="ident">end_idx</span> <span class="op">=</span><span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
         <span class="kw">return</span>;
     }
@@ -717,27 +996,26 @@
 
     <span class="kw">if</span> <span class="ident">distance_to_after_last</span> <span class="op">&lt;</span> <span class="ident">distance_to_start</span> {
         <span class="comment">// Deep checks walk the whole tree, so do these last.</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">after_last_node</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_unchanged_deep</span>(<span class="ident">after_last_node</span>, <span class="ident">change_map</span>) {
             <span class="kw">return</span>;
         }
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">nodes</span>[<span class="ident">start_idx</span>..<span class="op">=</span><span class="ident">end_idx</span>] {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">node</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">is_novel_deep</span>(<span class="ident">node</span>, <span class="ident">change_map</span>) {
                 <span class="kw">return</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">opposite</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">after_last_node</span>
-            .<span class="ident">info</span>()
-            .<span class="ident">change</span>
-            .<span class="ident">get</span>()
+        <span class="kw">let</span> <span class="ident">opposite</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">change_map</span>
+            .<span class="ident">get</span>(<span class="ident">after_last_node</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Node changes should be set&quot;</span>)
         {
             <span class="ident">Unchanged</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
         };
 
-        <span class="ident">start_node</span>.<span class="ident">set_change_deep</span>(<span class="ident">Unchanged</span>(<span class="ident">opposite</span>));
-        <span class="ident">after_last_node</span>.<span class="ident">set_change_deep</span>(<span class="ident">Novel</span>);
+        <span class="ident">insert_deep_unchanged</span>(<span class="ident">start_node</span>, <span class="kw-2">&amp;</span><span class="ident">opposite</span>, <span class="ident">change_map</span>);
+        <span class="ident">insert_deep_unchanged</span>(<span class="kw-2">&amp;</span><span class="ident">opposite</span>, <span class="ident">start_node</span>, <span class="ident">change_map</span>);
+        <span class="ident">insert_deep_novel</span>(<span class="ident">after_last_node</span>, <span class="ident">change_map</span>);
     }
 }
 
@@ -854,14 +1132,16 @@
 
         <span class="ident">init_all_info</span>(<span class="kw-2">&amp;</span><span class="ident">lhs</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>);
 
-        <span class="ident">lhs</span>[<span class="number">0</span>].<span class="ident">set_change</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>]));
-        <span class="ident">lhs</span>[<span class="number">1</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
-        <span class="ident">lhs</span>[<span class="number">2</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">change_map</span> <span class="op">=</span> <span class="ident">ChangeMap::default</span>();
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">0</span>], <span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>]));
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">1</span>], <span class="ident">Novel</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">2</span>], <span class="ident">Novel</span>);
 
-        <span class="ident">fix_all_sliders</span>(<span class="kw-2">&amp;</span><span class="ident">lhs</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">0</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">1</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">2</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
+        <span class="ident">fix_all_sliders</span>(<span class="ident">guess_language::Language::EmacsLisp</span>, <span class="kw-2">&amp;</span><span class="ident">lhs</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">change_map</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">0</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">1</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">2</span>]), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">0</span>]), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">2</span>])));
     }
 
     <span class="doccomment">/// Test that we slide at the end if the unchanged node is</span>
@@ -901,14 +1181,17 @@
 
         <span class="ident">init_all_info</span>(<span class="kw-2">&amp;</span><span class="ident">lhs</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>);
 
-        <span class="ident">lhs</span>[<span class="number">0</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
-        <span class="ident">lhs</span>[<span class="number">1</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
-        <span class="ident">lhs</span>[<span class="number">2</span>].<span class="ident">set_change</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>]));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">change_map</span> <span class="op">=</span> <span class="ident">ChangeMap::default</span>();
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">0</span>], <span class="ident">Novel</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">1</span>], <span class="ident">Novel</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>[<span class="number">2</span>], <span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>]));
 
-        <span class="ident">fix_all_sliders</span>(<span class="kw-2">&amp;</span><span class="ident">lhs</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">0</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">1</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">lhs</span>[<span class="number">2</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="ident">fix_all_sliders</span>(<span class="ident">guess_language::Language::EmacsLisp</span>, <span class="kw-2">&amp;</span><span class="ident">lhs</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">change_map</span>);
+
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">0</span>]), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">0</span>])));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">0</span>]), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">1</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">lhs</span>[<span class="number">2</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
     }
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_slider_two_steps</span>() {
@@ -919,17 +1202,18 @@
         <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">arena</span>, <span class="string">&quot;A B X\n A B&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>);
         <span class="ident">init_all_info</span>(<span class="kw-2">&amp;</span><span class="ident">lhs</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>);
 
-        <span class="ident">rhs</span>[<span class="number">0</span>].<span class="ident">set_change</span>(<span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">0</span>]));
-        <span class="ident">rhs</span>[<span class="number">1</span>].<span class="ident">set_change</span>(<span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">1</span>]));
-        <span class="ident">rhs</span>[<span class="number">2</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
-        <span class="ident">rhs</span>[<span class="number">3</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
-        <span class="ident">rhs</span>[<span class="number">4</span>].<span class="ident">set_change</span>(<span class="ident">Novel</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">change_map</span> <span class="op">=</span> <span class="ident">ChangeMap::default</span>();
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>[<span class="number">0</span>], <span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">0</span>]));
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>[<span class="number">1</span>], <span class="ident">Unchanged</span>(<span class="ident">lhs</span>[<span class="number">1</span>]));
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>[<span class="number">2</span>], <span class="ident">Novel</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>[<span class="number">3</span>], <span class="ident">Novel</span>);
+        <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>[<span class="number">4</span>], <span class="ident">Novel</span>);
 
-        <span class="ident">fix_all_sliders</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rhs</span>[<span class="number">0</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">rhs</span>[<span class="number">1</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">rhs</span>[<span class="number">2</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">rhs</span>[<span class="number">3</span>].<span class="ident">change</span>(), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
+        <span class="ident">fix_all_sliders</span>(<span class="ident">guess_language::Language::EmacsLisp</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">change_map</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">0</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">1</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">2</span>]), <span class="prelude-val">Some</span>(<span class="ident">Novel</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">change_map</span>.<span class="ident">get</span>(<span class="ident">rhs</span>[<span class="number">3</span>]), <span class="prelude-val">Some</span>(<span class="ident">Unchanged</span>(<span class="ident">rhs</span>[<span class="number">0</span>])));
     }
 }
 </code></pre></div>

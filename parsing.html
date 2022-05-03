@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="git.html"><strong aria-hidden="true">2.1.</strong> Git</a></li><li class="chapter-item expanded "><a href="mercurial.html"><strong aria-hidden="true">2.2.</strong> Mercurial</a></li></ol></li><li class="chapter-item expanded "><a href="parsing.html" class="active"><strong aria-hidden="true">3.</strong> Parsing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="upstream_parsers.html"><strong aria-hidden="true">3.1.</strong> Upstream Parsers</a></li></ol></li><li class="chapter-item expanded "><a href="diffing.html"><strong aria-hidden="true">4.</strong> Diffing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tricky_cases.html"><strong aria-hidden="true">4.1.</strong> Tricky Cases</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="glossary.html"><strong aria-hidden="true">6.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="alternative_projects.html"><strong aria-hidden="true">7.</strong> Alternative Projects</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tree_diffing.html"><strong aria-hidden="true">7.1.</strong> Tree Diffing</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li class="chapter-item expanded "><a href="usage.html"><strong aria-hidden="true">3.</strong> Usage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="git.html"><strong aria-hidden="true">3.1.</strong> Git</a></li><li class="chapter-item expanded "><a href="mercurial.html"><strong aria-hidden="true">3.2.</strong> Mercurial</a></li></ol></li><li class="chapter-item expanded "><a href="parsing.html" class="active"><strong aria-hidden="true">4.</strong> Parsing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="languages_supported.html"><strong aria-hidden="true">4.1.</strong> Languages Supported</a></li><li class="chapter-item expanded "><a href="parser_vendoring.html"><strong aria-hidden="true">4.2.</strong> Vendoring</a></li><li class="chapter-item expanded "><a href="adding_a_parser.html"><strong aria-hidden="true">4.3.</strong> Adding A Parser</a></li></ol></li><li class="chapter-item expanded "><a href="diffing.html"><strong aria-hidden="true">5.</strong> Diffing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tricky_cases.html"><strong aria-hidden="true">5.1.</strong> Tricky Cases</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">6.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="glossary.html"><strong aria-hidden="true">7.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="alternative_projects.html"><strong aria-hidden="true">8.</strong> Alternative Projects</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tree_diffing.html"><strong aria-hidden="true">8.1.</strong> Tree Diffing</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -110,6 +110,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/wilfred/difftastic" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
                     </div>
                 </div>
 
@@ -143,16 +146,17 @@ can be diffed.</p>
 <p>Difftastic relies on tree-sitter to understand syntax. You can view
 the parse tree that tree-sitter produces using the <code>--dump-ts</code>
 flag.</p>
-<pre><code>$ difft --dump-ts sample_files/before.js
-{Node program (0, 0) - (7, 0)}
-  {Node comment (0, 0) - (0, 8)}
-  {Node expression_statement (1, 0) - (1, 6)}
-    {Node call_expression (1, 0) - (1, 5)}
-      {Node identifier (1, 0) - (1, 3)}
-      {Node arguments (1, 3) - (1, 5)}
-        {Node ( (1, 3) - (1, 4)}
-        {Node ) (1, 4) - (1, 5)}
-        ...
+<pre><code>$ difft --dump-ts sample_files/javascript_simple_before.js | head
+program (0, 0) - (7, 0)
+  comment (0, 0) - (0, 8) &quot;// hello&quot;
+  expression_statement (1, 0) - (1, 6)
+    call_expression (1, 0) - (1, 5)
+      identifier (1, 0) - (1, 3) &quot;foo&quot;
+      arguments (1, 3) - (1, 5)
+        ( (1, 3) - (1, 4) &quot;(&quot;
+        ) (1, 4) - (1, 5) &quot;)&quot;
+    ; (1, 5) - (1, 6) &quot;;&quot;
+  expression_statement (2, 0) - (2, 6)
 </code></pre>
 <h2 id="simplified-syntax"><a class="header" href="#simplified-syntax">Simplified Syntax</a></h2>
 <p>Difftastic converts the tree-sitter parse tree to a simplified syntax
@@ -190,12 +194,12 @@ tokens. A list <code>[1]</code> will have a parse tree that includes <code>[</co
 as nodes.</p>
 <pre><code>$ echo '[1]' &gt; example.js
 $ difft --dump-ts example.js
-{Node program (0, 0) - (1, 0)}
-  {Node expression_statement (0, 0) - (0, 3)}
-    {Node array (0, 0) - (0, 3)}
-      {Node [ (0, 0) - (0, 1)}
-      {Node number (0, 1) - (0, 2)}
-      {Node ] (0, 2) - (0, 3)}
+program (0, 0) - (1, 0)
+  expression_statement (0, 0) - (0, 3)
+    array (0, 0) - (0, 3)
+      [ (0, 0) - (0, 1) &quot;[&quot;
+      number (0, 1) - (0, 2) &quot;1&quot;
+      ] (0, 2) - (0, 3) &quot;]&quot;
 </code></pre>
 <p><code>tree_sitter_parser.rs</code> uses <code>open_delimiter_tokens</code> to ensure that
 <code>[</code> and <code>]</code> are used as delimiter content in the enclosing list,
@@ -217,7 +221,7 @@ largely ignored during diffing.</p>
                             <a rel="prev" href="mercurial.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="upstream_parsers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="languages_supported.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -229,16 +233,13 @@ largely ignored during diffing.</p>
                     <a rel="prev" href="mercurial.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="upstream_parsers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="languages_supported.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
 
         </div>
 
-        <script type="text/javascript">
-            window.playground_copyable = true;
-        </script>
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="searcher.js" type="text/javascript" charset="utf-8"></script>

@@ -284,6 +284,43 @@
 <span id="284">284</span>
 <span id="285">285</span>
 <span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A fallback &quot;parser&quot; for plain text.</span>
 
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
@@ -294,6 +331,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">lines::NewlinePositions</span>,
+    <span class="ident">myers_diff</span>,
     <span class="ident">syntax</span>::{<span class="ident">split_words</span>, <span class="ident">AtomKind</span>, <span class="ident">MatchKind</span>, <span class="ident">MatchedPos</span>, <span class="ident">TokenKind</span>},
 };
 
@@ -333,8 +371,8 @@
     <span class="kw">for</span> (<span class="ident">kind</span>, <span class="ident">lhs_lines</span>, <span class="ident">rhs_lines</span>) <span class="kw">in</span> <span class="ident">lines</span> {
         <span class="kw">match</span> <span class="ident">kind</span> {
             <span class="ident">TextChangeKind::Novel</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">lhs_novel</span>.<span class="ident">extend</span>(<span class="ident">lhs_lines</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>());
-                <span class="ident">rhs_novel</span>.<span class="ident">extend</span>(<span class="ident">rhs_lines</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>());
+                <span class="ident">lhs_novel</span>.<span class="ident">extend</span>(<span class="ident">lhs_lines</span>.<span class="ident">iter</span>().<span class="ident">copied</span>());
+                <span class="ident">rhs_novel</span>.<span class="ident">extend</span>(<span class="ident">rhs_lines</span>.<span class="ident">iter</span>().<span class="ident">copied</span>());
             }
             <span class="ident">TextChangeKind::Unchanged</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">lhs_novel</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">rhs_novel</span>.<span class="ident">is_empty</span>() {
@@ -363,7 +401,10 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// This is the decorate-sort-undecorate pattern, or Schwartzian</span>
 <span class="doccomment">/// transform, for diffing.</span>
-<span class="kw">fn</span> <span class="ident">diff_slice_by_hash</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span><span class="op">&gt;</span>(<span class="ident">lhs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>], <span class="ident">rhs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">diff::Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">diff_slice_by_hash</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span><span class="op">&gt;</span>(
+    <span class="ident">lhs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>],
+    <span class="ident">rhs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>],
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">myers_diff::DiffResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value_ids</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span>, <span class="ident">u32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id_values</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
 
@@ -395,17 +436,21 @@
         <span class="ident">rhs_ids</span>.<span class="ident">push</span>(<span class="ident">id</span>);
     }
 
-    <span class="ident">diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_ids</span>[..], <span class="kw-2">&amp;</span><span class="ident">rhs_ids</span>[..])
+    <span class="ident">myers_diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_ids</span>[..], <span class="kw-2">&amp;</span><span class="ident">rhs_ids</span>[..])
         .<span class="ident">into_iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">result</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="ident">diff::Result::Left</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">diff::Result::Left</span>(<span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>()),
-            <span class="ident">diff::Result::Both</span>(<span class="ident">lhs_id</span>, <span class="ident">rhs_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">diff::Result::Both</span>(
+            <span class="ident">myers_diff::DiffResult::Left</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">myers_diff::DiffResult::Left</span>(<span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>())
+            }
+            <span class="ident">myers_diff::DiffResult::Both</span>(<span class="ident">lhs_id</span>, <span class="ident">rhs_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">myers_diff::DiffResult::Both</span>(
                 <span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">lhs_id</span>).<span class="ident">unwrap</span>(),
                 <span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">rhs_id</span>).<span class="ident">unwrap</span>(),
             ),
-            <span class="ident">diff::Result::Right</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">diff::Result::Right</span>(<span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>()),
+            <span class="ident">myers_diff::DiffResult::Right</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">myers_diff::DiffResult::Right</span>(<span class="kw-2">*</span><span class="ident">id_values</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>())
+            }
         })
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">diff::Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
 }
 
 <span class="kw">fn</span> <span class="ident">changed_parts</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
@@ -418,13 +463,13 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">TextChangeKind</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">for</span> <span class="ident">diff_res</span> <span class="kw">in</span> <span class="ident">diff_slice_by_hash</span>(<span class="kw-2">&amp;</span><span class="ident">src_lines</span>, <span class="kw-2">&amp;</span><span class="ident">opposite_src_lines</span>) {
         <span class="kw">match</span> <span class="ident">diff_res</span> {
-            <span class="ident">diff::Result::Left</span>(<span class="ident">line</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Left</span>(<span class="ident">line</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">TextChangeKind::Novel</span>, <span class="macro">vec!</span>[<span class="ident">line</span>], <span class="macro">vec!</span>[]));
             }
-            <span class="ident">diff::Result::Both</span>(<span class="ident">line</span>, <span class="ident">opposite_line</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Both</span>(<span class="ident">line</span>, <span class="ident">opposite_line</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">TextChangeKind::Unchanged</span>, <span class="macro">vec!</span>[<span class="ident">line</span>], <span class="macro">vec!</span>[<span class="ident">opposite_line</span>]));
             }
-            <span class="ident">diff::Result::Right</span>(<span class="ident">opposite_line</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">myers_diff::DiffResult::Right</span>(<span class="ident">opposite_line</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">TextChangeKind::Novel</span>, <span class="macro">vec!</span>[], <span class="macro">vec!</span>[<span class="ident">opposite_line</span>]));
             }
         }
@@ -432,6 +477,14 @@
 
     <span class="comment">// Merge so we can try word highlighting on similar lines.</span>
     <span class="ident">merge_novel</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>)
+}
+
+<span class="kw">fn</span> <span class="ident">line_len_in_bytes</span>(<span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">if</span> <span class="ident">line</span>.<span class="ident">ends_with</span>(<span class="string">&#39;\n&#39;</span>) {
+        <span class="ident">line</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>
+    } <span class="kw">else</span> {
+        <span class="ident">line</span>.<span class="ident">len</span>()
+    }
 }
 
 <span class="comment">// TODO: Prefer src/opposite_src nomenclature as this function is called from both sides.</span>
@@ -449,8 +502,10 @@
         <span class="kw">match</span> <span class="ident">kind</span> {
             <span class="ident">TextChangeKind::Unchanged</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">for</span> (<span class="ident">lhs_line</span>, <span class="ident">rhs_line</span>) <span class="kw">in</span> <span class="ident">lhs_lines</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">rhs_lines</span>) {
-                    <span class="kw">let</span> <span class="ident">lhs_pos</span> <span class="op">=</span> <span class="ident">lhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">lhs_offset</span>, <span class="ident">lhs_offset</span> <span class="op">+</span> <span class="ident">lhs_line</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
-                    <span class="kw">let</span> <span class="ident">rhs_pos</span> <span class="op">=</span> <span class="ident">rhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">rhs_offset</span>, <span class="ident">rhs_offset</span> <span class="op">+</span> <span class="ident">rhs_line</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
+                    <span class="kw">let</span> <span class="ident">lhs_pos</span> <span class="op">=</span>
+                        <span class="ident">lhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">lhs_offset</span>, <span class="ident">lhs_offset</span> <span class="op">+</span> <span class="ident">line_len_in_bytes</span>(<span class="ident">lhs_line</span>));
+                    <span class="kw">let</span> <span class="ident">rhs_pos</span> <span class="op">=</span>
+                        <span class="ident">rhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">rhs_offset</span>, <span class="ident">rhs_offset</span> <span class="op">+</span> <span class="ident">line_len_in_bytes</span>(<span class="ident">rhs_line</span>));
 
                     <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">MatchedPos</span> {
                         <span class="ident">kind</span>: <span class="ident">MatchKind::UnchangedToken</span> {
@@ -469,9 +524,10 @@
                 <span class="kw">let</span> <span class="ident">lhs_part</span> <span class="op">=</span> <span class="ident">lhs_lines</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>);
                 <span class="kw">let</span> <span class="ident">rhs_part</span> <span class="op">=</span> <span class="ident">rhs_lines</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>);
 
-                <span class="kw">for</span> <span class="ident">diff_res</span> <span class="kw">in</span> <span class="ident">diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">split_words</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_part</span>), <span class="kw-2">&amp;</span><span class="ident">split_words</span>(<span class="kw-2">&amp;</span><span class="ident">rhs_part</span>)) {
+                <span class="kw">for</span> <span class="ident">diff_res</span> <span class="kw">in</span> <span class="ident">myers_diff::slice</span>(<span class="kw-2">&amp;</span><span class="ident">split_words</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_part</span>), <span class="kw-2">&amp;</span><span class="ident">split_words</span>(<span class="kw-2">&amp;</span><span class="ident">rhs_part</span>))
+                {
                     <span class="kw">match</span> <span class="ident">diff_res</span> {
-                        <span class="ident">diff::Result::Left</span>(<span class="ident">lhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">myers_diff::DiffResult::Left</span>(<span class="ident">lhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">lhs_word</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;\n&quot;</span> {
                                 <span class="kw">let</span> <span class="ident">lhs_pos</span> <span class="op">=</span>
                                     <span class="ident">lhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">lhs_offset</span>, <span class="ident">lhs_offset</span> <span class="op">+</span> <span class="ident">lhs_word</span>.<span class="ident">len</span>());
@@ -485,7 +541,7 @@
 
                             <span class="ident">lhs_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">lhs_word</span>.<span class="ident">len</span>();
                         }
-                        <span class="ident">diff::Result::Both</span>(<span class="ident">lhs_word</span>, <span class="ident">rhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">myers_diff::DiffResult::Both</span>(<span class="ident">lhs_word</span>, <span class="ident">rhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">lhs_word</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;\n&quot;</span> {
                                 <span class="kw">let</span> <span class="ident">lhs_pos</span> <span class="op">=</span>
                                     <span class="ident">lhs_nlp</span>.<span class="ident">from_offsets</span>(<span class="ident">lhs_offset</span>, <span class="ident">lhs_offset</span> <span class="op">+</span> <span class="ident">lhs_word</span>.<span class="ident">len</span>());
@@ -505,7 +561,7 @@
                             <span class="ident">lhs_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">lhs_word</span>.<span class="ident">len</span>();
                             <span class="ident">rhs_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs_word</span>.<span class="ident">len</span>();
                         }
-                        <span class="ident">diff::Result::Right</span>(<span class="ident">rhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">myers_diff::DiffResult::Right</span>(<span class="ident">rhs_word</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="ident">rhs_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs_word</span>.<span class="ident">len</span>();
                         }
                     }
@@ -519,6 +575,8 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::positions::SingleLineSpan</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">pretty_assertions::assert_eq</span>;
 
@@ -534,7 +592,15 @@
         <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">change_positions</span>(<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;foo&quot;</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">positions</span>.<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_change</span>());
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_novel</span>());
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">pos</span>,
+            <span class="ident">SingleLineSpan</span> {
+                <span class="ident">line</span>: <span class="number">0</span>.<span class="ident">into</span>(),
+                <span class="ident">start_col</span>: <span class="number">0</span>,
+                <span class="ident">end_col</span>: <span class="number">3</span>
+            }
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -543,7 +609,7 @@
         <span class="comment">// be treated as a change. We&#39;re doing a line-based diff and</span>
         <span class="comment">// the lines are different.</span>
         <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">change_positions</span>(<span class="string">&quot;foo&quot;</span>, <span class="string">&quot; foo&quot;</span>);
-        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_change</span>());
+        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_novel</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -551,7 +617,15 @@
         <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">change_positions</span>(<span class="string">&quot;foo\n&quot;</span>, <span class="string">&quot;foo\n&quot;</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">positions</span>.<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_change</span>());
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_novel</span>());
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">pos</span>,
+            <span class="ident">SingleLineSpan</span> {
+                <span class="ident">line</span>: <span class="number">0</span>.<span class="ident">into</span>(),
+                <span class="ident">start_col</span>: <span class="number">0</span>,
+                <span class="ident">end_col</span>: <span class="number">3</span>
+            }
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -559,7 +633,7 @@
         <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">change_positions</span>(<span class="string">&quot;foo\n&quot;</span>, <span class="string">&quot;&quot;</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">positions</span>.<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_change</span>());
+        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_novel</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -567,7 +641,7 @@
         <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="ident">change_positions</span>(<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;&quot;</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">positions</span>.<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_change</span>());
+        <span class="macro">assert!</span>(<span class="ident">positions</span>[<span class="number">0</span>].<span class="ident">kind</span>.<span class="ident">is_novel</span>());
     }
 }
 </code></pre></div>

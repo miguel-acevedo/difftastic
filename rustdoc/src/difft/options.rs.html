@@ -317,28 +317,111 @@
 <span id="317">317</span>
 <span id="318">318</span>
 <span id="319">319</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::env</span>;
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">env</span>, <span class="ident">ffi::OsString</span>};
 
 <span class="kw">use</span> <span class="ident">atty::Stream</span>;
-<span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">crate_authors</span>, <span class="ident">crate_description</span>, <span class="ident">crate_version</span>, <span class="ident">App</span>, <span class="ident">AppSettings</span>, <span class="ident">Arg</span>};
+<span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">crate_authors</span>, <span class="ident">crate_description</span>, <span class="ident">crate_version</span>, <span class="ident">Arg</span>, <span class="ident">Command</span>};
 <span class="kw">use</span> <span class="ident">const_format::formatcp</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::BackgroundColor</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">guess_language</span>, <span class="ident">style::BackgroundColor</span>};
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_NODE_LIMIT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100_000</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_NODE_LIMIT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">30_000</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_BYTE_LIMIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1_000_000</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_TAB_WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
 <span class="kw">const</span> <span class="ident">USAGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;CARGO_BIN_NAME&quot;</span>), <span class="string">&quot; [OPTIONS] OLD-PATH NEW-PATH&quot;</span>);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ColorOutput</span> {
     <span class="ident">Always</span>,
     <span class="ident">Auto</span>,
     <span class="ident">Never</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">clap::App</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
-    <span class="ident">App::new</span>(<span class="string">&quot;Difftastic&quot;</span>)
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DisplayOptions</span> {
+    <span class="kw">pub</span> <span class="ident">background_color</span>: <span class="ident">BackgroundColor</span>,
+    <span class="kw">pub</span> <span class="ident">use_color</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">display_mode</span>: <span class="ident">DisplayMode</span>,
+    <span class="kw">pub</span> <span class="ident">print_unchanged</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">tab_width</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">display_width</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">syntax_highlight</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">fn</span> <span class="ident">app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">clap::Command</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
+    <span class="ident">Command::new</span>(<span class="string">&quot;Difftastic&quot;</span>)
         .<span class="ident">override_usage</span>(<span class="ident">USAGE</span>)
         .<span class="ident">version</span>(<span class="macro">crate_version!</span>())
         .<span class="ident">about</span>(<span class="macro">crate_description!</span>())
@@ -361,8 +444,8 @@
                 .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;PATH&quot;</span>)
                 .<span class="ident">long_help</span>(
-                    <span class="string">&quot;[DEBUG] Parse a single file with tree-sitter and display the difftastic syntax tree.&quot;</span>,
-                ),
+                    <span class="string">&quot;Parse a single file with tree-sitter and display the difftastic syntax tree.&quot;</span>,
+                ).<span class="ident">help_heading</span>(<span class="string">&quot;DEBUG OPTIONS&quot;</span>),
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;dump-ts&quot;</span>)
@@ -370,17 +453,36 @@
                 .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;PATH&quot;</span>)
                 .<span class="ident">long_help</span>(
-                    <span class="string">&quot;[DEBUG] Parse a single file with tree-sitter and display the tree-sitter parse tree.&quot;</span>,
-                ),
+                    <span class="string">&quot;Parse a single file with tree-sitter and display the tree-sitter parse tree.&quot;</span>,
+                ).<span class="ident">help_heading</span>(<span class="string">&quot;DEBUG OPTIONS&quot;</span>),
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;width&quot;</span>)
                 .<span class="ident">long</span>(<span class="string">&quot;width&quot;</span>)
                 .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;COLUMNS&quot;</span>)
-                .<span class="ident">long_help</span>(<span class="string">&quot;Use this many columns when calculating line wrapping. Overrides $DFT_WIDTH if present. If not specified, difftastic will detect the terminal width.&quot;</span>)
+                .<span class="ident">long_help</span>(<span class="string">&quot;Use this many columns when calculating line wrapping. If not specified, difftastic will detect the terminal width.&quot;</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_WIDTH&quot;</span>)
                 .<span class="ident">validator</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>())
                 .<span class="ident">required</span>(<span class="bool-val">false</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg::new</span>(<span class="string">&quot;tab-width&quot;</span>)
+                .<span class="ident">long</span>(<span class="string">&quot;tab-width&quot;</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">value_name</span>(<span class="string">&quot;NUM_SPACES&quot;</span>)
+                .<span class="ident">long_help</span>(<span class="string">&quot;Treat a tab as this many spaces.&quot;</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_TAB_WIDTH&quot;</span>)
+                .<span class="ident">default_value</span>(<span class="macro">formatcp!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">DEFAULT_TAB_WIDTH</span>))
+                .<span class="ident">validator</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>())
+                .<span class="ident">required</span>(<span class="bool-val">false</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg::new</span>(<span class="string">&quot;display&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;display&quot;</span>)
+                .<span class="ident">possible_values</span>([<span class="string">&quot;side-by-side&quot;</span>, <span class="string">&quot;side-by-side-show-both&quot;</span>, <span class="string">&quot;inline&quot;</span>, ])
+                .<span class="ident">value_name</span>(<span class="string">&quot;MODE&quot;</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_DISPLAY&quot;</span>)
+                .<span class="ident">help</span>(<span class="string">&quot;Display mode for showing results.&quot;</span>)
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;color&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;color&quot;</span>)
@@ -391,8 +493,17 @@
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;background&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;background&quot;</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;BACKGROUND&quot;</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_BACKGROUND&quot;</span>)
                 .<span class="ident">possible_values</span>([<span class="string">&quot;dark&quot;</span>, <span class="string">&quot;light&quot;</span>])
-                .<span class="ident">help</span>(<span class="string">&quot;Set the background color. Overrides $DFT_BACKGROUND if present. Difftastic will prefer brighter colours on dark backgrounds.&quot;</span>)
+                .<span class="ident">help</span>(<span class="string">&quot;Set the background brightness. Difftastic will prefer brighter colours on dark backgrounds.&quot;</span>)
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg::new</span>(<span class="string">&quot;syntax-highlight&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;syntax-highlight&quot;</span>)
+                .<span class="ident">value_name</span>(<span class="string">&quot;ON/OFF&quot;</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_SYNTAX_HIGHLIGHT&quot;</span>)
+                .<span class="ident">possible_values</span>([<span class="string">&quot;on&quot;</span>, <span class="string">&quot;off&quot;</span>])
+                .<span class="ident">default_value</span>(<span class="string">&quot;on&quot;</span>)
+                .<span class="ident">help</span>(<span class="string">&quot;Enable or disable syntax highlighting.&quot;</span>)
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;skip-unchanged&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;skip-unchanged&quot;</span>)
@@ -400,14 +511,22 @@
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;missing-as-empty&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;missing-as-empty&quot;</span>)
-                .<span class="ident">help</span>(<span class="string">&quot;Treat paths that don&#39;t exist as equivalent to an empty file.&quot;</span>)
+                .<span class="ident">help</span>(<span class="string">&quot;Treat paths that don&#39;t exist as equivalent to an empty file. Only applies when diffing files, not directories.&quot;</span>)
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg::new</span>(<span class="string">&quot;language&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;language&quot;</span>)
+                .<span class="ident">value_name</span>(<span class="string">&quot;EXT&quot;</span>)
+                .<span class="ident">allow_invalid_utf8</span>(<span class="bool-val">true</span>)
+                .<span class="ident">help</span>(<span class="string">&quot;Override language detection. Inputs are assumed to have this file extension. When diffing directories, applies to all files.&quot;</span>)
+                <span class="comment">// TODO: support DFT_LANGUAGE for consistency</span>
         )
         .<span class="ident">arg</span>(
             <span class="ident">Arg::new</span>(<span class="string">&quot;node-limit&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;node-limit&quot;</span>)
                 .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;LIMIT&quot;</span>)
-                .<span class="ident">help</span>(<span class="macro">concat!</span>(<span class="string">&quot;Use a text diff if the number of syntax nodes exceeds this number. Overrides $DFT_NODE_LIMIT if present.&quot;</span>))
+                .<span class="ident">help</span>(<span class="macro">concat!</span>(<span class="string">&quot;Use a text diff if the number of syntax nodes exceeds this number.&quot;</span>))
                 .<span class="ident">default_value</span>(<span class="macro">formatcp!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">DEFAULT_NODE_LIMIT</span>))
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_NODE_LIMIT&quot;</span>)
                 .<span class="ident">validator</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>())
                 .<span class="ident">required</span>(<span class="bool-val">false</span>),
         )
@@ -415,8 +534,9 @@
             <span class="ident">Arg::new</span>(<span class="string">&quot;byte-limit&quot;</span>).<span class="ident">long</span>(<span class="string">&quot;byte-limit&quot;</span>)
                 .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
                 .<span class="ident">value_name</span>(<span class="string">&quot;LIMIT&quot;</span>)
-                .<span class="ident">help</span>(<span class="macro">concat!</span>(<span class="string">&quot;Use a text diff if either input file exceeds this size. Overrides $DFT_BYTE_LIMIT if present.&quot;</span>))
+                .<span class="ident">help</span>(<span class="macro">concat!</span>(<span class="string">&quot;Use a text diff if either input file exceeds this size.&quot;</span>))
                 .<span class="ident">default_value</span>(<span class="macro">formatcp!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">DEFAULT_BYTE_LIMIT</span>))
+                .<span class="ident">env</span>(<span class="string">&quot;DFT_BYTE_LIMIT&quot;</span>)
                 .<span class="ident">validator</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>())
                 .<span class="ident">required</span>(<span class="bool-val">false</span>),
         )
@@ -427,27 +547,34 @@
                 .<span class="ident">hide</span>(<span class="bool-val">true</span>)
                 .<span class="ident">allow_invalid_utf8</span>(<span class="bool-val">true</span>),
         )
-        .<span class="ident">setting</span>(<span class="ident">AppSettings::ArgRequiredElseHelp</span>)
+        .<span class="ident">arg_required_else_help</span>(<span class="bool-val">true</span>)
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DisplayMode</span> {
+    <span class="ident">Inline</span>,
+    <span class="ident">SideBySide</span>,
+    <span class="ident">SideBySideShowBoth</span>,
 }
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Mode</span> {
     <span class="ident">Diff</span> {
         <span class="ident">node_limit</span>: <span class="ident">u32</span>,
         <span class="ident">byte_limit</span>: <span class="ident">usize</span>,
-        <span class="ident">print_unchanged</span>: <span class="ident">bool</span>,
+        <span class="ident">display_options</span>: <span class="ident">DisplayOptions</span>,
         <span class="ident">missing_as_empty</span>: <span class="ident">bool</span>,
-        <span class="ident">background_color</span>: <span class="ident">BackgroundColor</span>,
-        <span class="ident">color_output</span>: <span class="ident">ColorOutput</span>,
-        <span class="ident">display_width</span>: <span class="ident">usize</span>,
         <span class="ident">display_path</span>: <span class="ident">String</span>,
-        <span class="ident">lhs_path</span>: <span class="ident">String</span>,
-        <span class="ident">rhs_path</span>: <span class="ident">String</span>,
+        <span class="ident">language_override</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">guess_language::Language</span><span class="op">&gt;</span>,
+        <span class="ident">lhs_path</span>: <span class="ident">OsString</span>,
+        <span class="ident">rhs_path</span>: <span class="ident">OsString</span>,
     },
     <span class="ident">DumpTreeSitter</span> {
         <span class="ident">path</span>: <span class="ident">String</span>,
+        <span class="ident">language_override</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">guess_language::Language</span><span class="op">&gt;</span>,
     },
     <span class="ident">DumpSyntax</span> {
         <span class="ident">path</span>: <span class="ident">String</span>,
+        <span class="ident">language_override</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">guess_language::Language</span><span class="op">&gt;</span>,
     },
 }
 
@@ -455,35 +582,51 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_args</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Mode</span> {
     <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">app</span>().<span class="ident">get_matches</span>();
 
+    <span class="kw">let</span> <span class="ident">language_override</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">matches</span>.<span class="ident">value_of_os</span>(<span class="string">&quot;language&quot;</span>) {
+        <span class="prelude-val">Some</span>(<span class="ident">lang_str</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lang</span>) <span class="op">=</span> <span class="ident">guess_language::from_extension</span>(<span class="ident">lang_str</span>) {
+                <span class="prelude-val">Some</span>(<span class="ident">lang</span>)
+            } <span class="kw">else</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;No language is associated with extension: {}&quot;</span>,
+                    <span class="ident">lang_str</span>.<span class="ident">to_string_lossy</span>()
+                );
+                <span class="prelude-val">None</span>
+            }
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+    };
+
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">path</span>) <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;dump-syntax&quot;</span>) {
         <span class="kw">return</span> <span class="ident">Mode::DumpSyntax</span> {
             <span class="ident">path</span>: <span class="ident">path</span>.<span class="ident">to_string</span>(),
+            <span class="ident">language_override</span>,
         };
     }
 
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">path</span>) <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;dump-ts&quot;</span>) {
         <span class="kw">return</span> <span class="ident">Mode::DumpTreeSitter</span> {
             <span class="ident">path</span>: <span class="ident">path</span>.<span class="ident">to_string</span>(),
+            <span class="ident">language_override</span>,
         };
     }
 
-    <span class="comment">// TODO: Use OsString rather than forcing paths to be valid UTF-8.</span>
-    <span class="kw">let</span> <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">values_of_lossy</span>(<span class="string">&quot;paths&quot;</span>).<span class="ident">unwrap_or_default</span>();
+    <span class="kw">let</span> <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">values_of_os</span>(<span class="string">&quot;paths&quot;</span>).<span class="ident">unwrap_or_default</span>().<span class="ident">collect</span>();
     <span class="macro">info!</span>(<span class="string">&quot;CLI arguments: {:?}&quot;</span>, <span class="ident">args</span>);
 
     <span class="comment">// TODO: document these different ways of calling difftastic.</span>
     <span class="kw">let</span> (<span class="ident">display_path</span>, <span class="ident">lhs_path</span>, <span class="ident">rhs_path</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">args</span>[..] {
         [<span class="ident">lhs_path</span>, <span class="ident">rhs_path</span>] <span class="op">=</span><span class="op">&gt;</span> (
-            <span class="ident">rhs_path</span>.<span class="ident">to_string</span>(),
-            <span class="ident">lhs_path</span>.<span class="ident">to_string</span>(),
-            <span class="ident">rhs_path</span>.<span class="ident">to_string</span>(),
+            <span class="ident">rhs_path</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">lhs_path</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">rhs_path</span>.<span class="ident">to_owned</span>(),
         ),
         [<span class="ident">display_path</span>, <span class="ident">lhs_tmp_file</span>, <span class="ident">_lhs_hash</span>, <span class="ident">_lhs_mode</span>, <span class="ident">rhs_tmp_file</span>, <span class="ident">_rhs_hash</span>, <span class="ident">_rhs_mode</span>] <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// https://git-scm.com/docs/git#Documentation/git.txt-codeGITEXTERNALDIFFcode</span>
             (
-                <span class="ident">display_path</span>.<span class="ident">to_string</span>(),
-                <span class="ident">lhs_tmp_file</span>.<span class="ident">to_string</span>(),
-                <span class="ident">rhs_tmp_file</span>.<span class="ident">to_string</span>(),
+                <span class="ident">display_path</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">lhs_tmp_file</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">rhs_tmp_file</span>.<span class="ident">to_owned</span>(),
             )
         }
         [<span class="ident">_old_name</span>, <span class="ident">lhs_tmp_file</span>, <span class="ident">_lhs_hash</span>, <span class="ident">_lhs_mode</span>, <span class="ident">rhs_tmp_file</span>, <span class="ident">_rhs_hash</span>, <span class="ident">_rhs_mode</span>, <span class="ident">new_name</span>, <span class="ident">_similarity</span>] <span class="op">=</span><span class="op">&gt;</span>
@@ -492,9 +635,9 @@
             <span class="comment">// TODO: mention old name as well as diffing.</span>
             <span class="comment">// TODO: where does git document these 9 arguments?</span>
             (
-                <span class="ident">new_name</span>.<span class="ident">to_string</span>(),
-                <span class="ident">lhs_tmp_file</span>.<span class="ident">to_string</span>(),
-                <span class="ident">rhs_tmp_file</span>.<span class="ident">to_string</span>(),
+                <span class="ident">new_name</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">lhs_tmp_file</span>.<span class="ident">to_owned</span>(),
+                <span class="ident">rhs_tmp_file</span>.<span class="ident">to_owned</span>(),
             )
         }
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -516,12 +659,20 @@
             .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Already validated by clap&quot;</span>)
     } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">env_width</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">env_width</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_WIDTH&quot;</span>) {
-            <span class="ident">env_width</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">ok</span>()
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        };
-        <span class="ident">env_width</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">detect_display_width</span>)
+        <span class="ident">detect_display_width</span>()
+    };
+
+    <span class="kw">let</span> <span class="ident">display_mode</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">display_mode_str</span>) <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;display&quot;</span>) {
+        <span class="kw">match</span> <span class="ident">display_mode_str</span>.<span class="ident">borrow</span>() {
+            <span class="string">&quot;side-by-side&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DisplayMode::SideBySide</span>,
+            <span class="string">&quot;side-by-side-show-both&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DisplayMode::SideBySideShowBoth</span>,
+            <span class="string">&quot;inline&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DisplayMode::Inline</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;clap has already validated display&quot;</span>)
+            }
+        }
+    } <span class="kw">else</span> {
+        <span class="ident">DisplayMode::SideBySide</span>
     };
 
     <span class="kw">let</span> <span class="ident">color_output</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">color_when</span>) <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;color&quot;</span>) {
@@ -543,62 +694,53 @@
             <span class="ident">BackgroundColor::Dark</span>
         }
     } <span class="kw">else</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">background</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_BACKGROUND&quot;</span>) {
-            <span class="kw">if</span> <span class="ident">background</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;light&quot;</span> {
-                <span class="ident">BackgroundColor::Light</span>
-            } <span class="kw">else</span> {
-                <span class="ident">BackgroundColor::Dark</span>
-            }
-        } <span class="kw">else</span> {
-            <span class="ident">BackgroundColor::Dark</span>
-        }
+        <span class="ident">BackgroundColor::Dark</span>
     };
 
-    <span class="kw">let</span> <span class="ident">node_limit</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">matches</span>.<span class="ident">occurrences_of</span>(<span class="string">&quot;node-limit&quot;</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">env_width</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_NODE_LIMIT&quot;</span>) {
-            <span class="ident">env_width</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">ok</span>().<span class="ident">unwrap_or</span>(<span class="ident">DEFAULT_NODE_LIMIT</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">DEFAULT_NODE_LIMIT</span>
-        }
-    } <span class="kw">else</span> {
-        <span class="ident">matches</span>
-            .<span class="ident">value_of</span>(<span class="string">&quot;node-limit&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Always present as we&#39;ve given clap a default&quot;</span>)
-            .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Value already validated by clap&quot;</span>)
-    };
+    <span class="kw">let</span> <span class="ident">syntax_highlight</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;syntax-highlight&quot;</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&quot;on&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">byte_limit</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">matches</span>.<span class="ident">occurrences_of</span>(<span class="string">&quot;byte-limit&quot;</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">env_width</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DFT_BYTE_LIMIT&quot;</span>) {
-            <span class="ident">env_width</span>
-                .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
-                .<span class="ident">ok</span>()
-                .<span class="ident">unwrap_or</span>(<span class="ident">DEFAULT_BYTE_LIMIT</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">DEFAULT_BYTE_LIMIT</span>
-        }
-    } <span class="kw">else</span> {
-        <span class="ident">matches</span>
-            .<span class="ident">value_of</span>(<span class="string">&quot;byte-limit&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Always present as we&#39;ve given clap a default&quot;</span>)
-            .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Value already validated by clap&quot;</span>)
-    };
+    <span class="kw">let</span> <span class="ident">node_limit</span> <span class="op">=</span> <span class="ident">matches</span>
+        .<span class="ident">value_of</span>(<span class="string">&quot;node-limit&quot;</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Always present as we&#39;ve given clap a default&quot;</span>)
+        .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Value already validated by clap&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">byte_limit</span> <span class="op">=</span> <span class="ident">matches</span>
+        .<span class="ident">value_of</span>(<span class="string">&quot;byte-limit&quot;</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Always present as we&#39;ve given clap a default&quot;</span>)
+        .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Value already validated by clap&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">tab_width</span> <span class="op">=</span> <span class="ident">matches</span>
+        .<span class="ident">value_of</span>(<span class="string">&quot;tab-width&quot;</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Always present as we&#39;ve given clap a default&quot;</span>)
+        .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Value already validated by clap&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">print_unchanged</span> <span class="op">=</span> <span class="op">!</span><span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;skip-unchanged&quot;</span>);
     <span class="kw">let</span> <span class="ident">missing_as_empty</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;missing-as-empty&quot;</span>);
 
+    <span class="kw">let</span> <span class="ident">use_color</span> <span class="op">=</span> <span class="ident">should_use_color</span>(<span class="ident">color_output</span>);
+
+    <span class="kw">let</span> <span class="ident">display_options</span> <span class="op">=</span> <span class="ident">DisplayOptions</span> {
+        <span class="ident">background_color</span>,
+        <span class="ident">use_color</span>,
+        <span class="ident">print_unchanged</span>,
+        <span class="ident">tab_width</span>,
+        <span class="ident">display_mode</span>,
+        <span class="ident">display_width</span>,
+        <span class="ident">syntax_highlight</span>,
+    };
+
     <span class="ident">Mode::Diff</span> {
         <span class="ident">node_limit</span>,
         <span class="ident">byte_limit</span>,
-        <span class="ident">print_unchanged</span>,
+        <span class="ident">display_options</span>,
         <span class="ident">missing_as_empty</span>,
-        <span class="ident">background_color</span>,
-        <span class="ident">color_output</span>,
-        <span class="ident">display_width</span>,
-        <span class="ident">display_path</span>,
-        <span class="ident">lhs_path</span>,
-        <span class="ident">rhs_path</span>,
+        <span class="ident">display_path</span>: <span class="ident">display_path</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>(),
+        <span class="ident">language_override</span>,
+        <span class="ident">lhs_path</span>: <span class="ident">lhs_path</span>.<span class="ident">to_owned</span>(),
+        <span class="ident">rhs_path</span>: <span class="ident">rhs_path</span>.<span class="ident">to_owned</span>(),
     }
 }
 

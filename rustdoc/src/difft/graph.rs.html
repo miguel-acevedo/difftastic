@@ -635,24 +635,6 @@
 <span id="635">635</span>
 <span id="636">636</span>
 <span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A graph representation for computing tree diffs.</span>
 
 <span class="kw">use</span> <span class="ident">rpds::Stack</span>;
@@ -663,7 +645,10 @@
 };
 <span class="kw">use</span> <span class="ident">strsim::normalized_levenshtein</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syntax</span>::{<span class="ident">AtomKind</span>, <span class="ident">ChangeKind</span>, <span class="ident">Syntax</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">changes</span>::{<span class="ident">insert_deep_unchanged</span>, <span class="ident">ChangeKind</span>, <span class="ident">ChangeMap</span>},
+    <span class="ident">syntax</span>::{<span class="ident">AtomKind</span>, <span class="ident">Syntax</span>, <span class="ident">SyntaxId</span>},
+};
 <span class="kw">use</span> <span class="ident">Edge</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A vertex in a directed acyclic graph that represents a diff.</span>
@@ -699,8 +684,9 @@
     <span class="kw">pub</span> <span class="ident">lhs_syntax</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">rhs_syntax</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">parents</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">EnteredDelimiter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">lhs_parent_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="ident">rhs_parent_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">lhs_parent_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SyntaxId</span><span class="op">&gt;</span>,
+    <span class="ident">rhs_parent_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SyntaxId</span><span class="op">&gt;</span>,
+    <span class="ident">can_pop_either</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Vertex</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -725,6 +711,12 @@
             <span class="comment">// the graph size relative to tree depth.</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">lhs_parent_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">lhs_parent_id</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">rhs_parent_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">rhs_parent_id</span>
+            <span class="comment">// We do want to distinguish whether we can pop each side</span>
+            <span class="comment">// independently though. Without this, if we find a case</span>
+            <span class="comment">// where we can pop sides together, we don&#39;t consider the</span>
+            <span class="comment">// case where we get a better diff by popping each side</span>
+            <span class="comment">// separately.</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">can_pop_either</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">can_pop_either</span>
     }
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Vertex</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {}
@@ -736,6 +728,7 @@
 
         <span class="self">self</span>.<span class="ident">lhs_parent_id</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">rhs_parent_id</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
+        <span class="self">self</span>.<span class="ident">can_pop_either</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
     }
 }
 
@@ -761,7 +754,11 @@
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">EnteredDelimiter::PopEither</span>((<span class="ident">lhs_delims</span>, <span class="ident">rhs_delims</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">format!</span>(<span class="string">&quot;PopEither({}, {})&quot;</span>, <span class="ident">lhs_delims</span>.<span class="ident">size</span>(), <span class="ident">rhs_delims</span>.<span class="ident">size</span>())
+                <span class="macro">format!</span>(
+                    <span class="string">&quot;PopEither(lhs count: {}, rhs count: {})&quot;</span>,
+                    <span class="ident">lhs_delims</span>.<span class="ident">size</span>(),
+                    <span class="ident">rhs_delims</span>.<span class="ident">size</span>()
+                )
             }
             <span class="ident">EnteredDelimiter::PopBoth</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PopBoth&quot;</span>.<span class="ident">to_string</span>(),
         };
@@ -775,6 +772,13 @@
     <span class="ident">rhs_delim</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Syntax</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">EnteredDelimiter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="ident">entered</span>.<span class="ident">push</span>(<span class="ident">EnteredDelimiter::PopBoth</span>((<span class="ident">lhs_delim</span>, <span class="ident">rhs_delim</span>)))
+}
+
+<span class="kw">fn</span> <span class="ident">can_pop_either_parent</span>(<span class="ident">entered</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">EnteredDelimiter</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">match</span> <span class="ident">entered</span>.<span class="ident">peek</span>() {
+        <span class="prelude-val">Some</span>(<span class="ident">EnteredDelimiter::PopEither</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+    }
 }
 
 <span class="kw">fn</span> <span class="ident">try_pop_both</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
@@ -893,6 +897,7 @@
             <span class="ident">parents</span>,
             <span class="ident">lhs_parent_id</span>: <span class="prelude-val">None</span>,
             <span class="ident">rhs_parent_id</span>: <span class="prelude-val">None</span>,
+            <span class="ident">can_pop_either</span>: <span class="bool-val">false</span>,
         }
     }
 }
@@ -915,8 +920,6 @@
     <span class="comment">// rather doing LHS and RHS separately.</span>
     <span class="ident">EnterNovelDelimiterLHS</span> { <span class="ident">contiguous</span>: <span class="ident">bool</span> },
     <span class="ident">EnterNovelDelimiterRHS</span> { <span class="ident">contiguous</span>: <span class="ident">bool</span> },
-    <span class="ident">NovelTreeLHS</span> { <span class="ident">num_descendants</span>: <span class="ident">u32</span> },
-    <span class="ident">NovelTreeRHS</span> { <span class="ident">num_descendants</span>: <span class="ident">u32</span> },
     <span class="ident">ExitDelimiterLHS</span>,
     <span class="ident">ExitDelimiterRHS</span>,
     <span class="ident">ExitDelimiterBoth</span>,
@@ -925,11 +928,18 @@
 <span class="kw">impl</span> <span class="ident">Edge</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cost</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
+            <span class="comment">// When we&#39;re at the end of a list, there&#39;s only one exit</span>
+            <span class="comment">// delimiter possibility, so the cost doesn&#39;t matter. We</span>
+            <span class="comment">// choose a non-zero number as it&#39;s easier to reason</span>
+            <span class="comment">// about.</span>
             <span class="ident">ExitDelimiterBoth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="comment">// Choose a higher value for exiting individually. This</span>
+            <span class="comment">// shouldn&#39;t matter since entering a novel delimiter is</span>
+            <span class="comment">// already more expensive than entering a matched</span>
+            <span class="comment">// delimiter, but be defensive.</span>
             <span class="ident">ExitDelimiterLHS</span> <span class="op">|</span> <span class="ident">ExitDelimiterRHS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
 
             <span class="comment">// Matching nodes is always best.</span>
-            <span class="comment">// TODO: now we model parents correctly, do we need to track depth difference?</span>
             <span class="ident">UnchangedNode</span> { <span class="ident">depth_difference</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">min</span>(<span class="number">40</span>, <span class="kw-2">*</span><span class="ident">depth_difference</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">+</span> <span class="number">1</span>),
             <span class="comment">// Matching an outer delimiter is good.</span>
             <span class="ident">EnterUnchangedDelimiter</span> { <span class="ident">depth_difference</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="number">100</span> <span class="op">+</span> <span class="ident">min</span>(<span class="number">40</span>, <span class="kw-2">*</span><span class="ident">depth_difference</span> <span class="kw">as</span> <span class="ident">u64</span>),
@@ -954,18 +964,9 @@
                     <span class="number">350</span>
                 }
             }
-
-            <span class="comment">// For large trees, it&#39;s better to mark the whole tree as</span>
-            <span class="comment">// novel rather than marking 90% of the children as</span>
-            <span class="comment">// novel. This stops us matching up completely unrelated trees.</span>
-            <span class="ident">NovelTreeLHS</span> { <span class="ident">num_descendants</span> } <span class="op">|</span> <span class="ident">NovelTreeRHS</span> { <span class="ident">num_descendants</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="number">300</span> <span class="op">+</span> (<span class="kw-2">*</span><span class="ident">num_descendants</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> <span class="number">10</span>) <span class="op">*</span> <span class="ident">NovelAtomLHS</span> { <span class="ident">contiguous</span>: <span class="bool-val">false</span> }.<span class="ident">cost</span>()
-            }
         }
     }
 }
-
-<span class="kw">const</span> <span class="ident">NOVEL_TREE_THRESHOLD</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">20</span>;
 
 <span class="doccomment">/// Calculate all the neighbours from `v` and write them to `buf`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">neighbours</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">Vertex</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Edge</span>, <span class="ident">Vertex</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)<span class="op">&gt;</span>]) {
@@ -986,6 +987,7 @@
                 <span class="ident">Vertex</span> {
                     <span class="ident">lhs_syntax</span>: <span class="ident">lhs_parent</span>.<span class="ident">next_sibling</span>(),
                     <span class="ident">rhs_syntax</span>: <span class="ident">rhs_parent</span>.<span class="ident">next_sibling</span>(),
+                    <span class="ident">can_pop_either</span>: <span class="ident">can_pop_either_parent</span>(<span class="kw-2">&amp;</span><span class="ident">parents_next</span>),
                     <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                     <span class="ident">lhs_parent_id</span>: <span class="ident">lhs_parent</span>.<span class="ident">parent</span>().<span class="ident">map</span>(<span class="ident">Syntax::id</span>),
                     <span class="ident">rhs_parent_id</span>: <span class="ident">rhs_parent</span>.<span class="ident">parent</span>().<span class="ident">map</span>(<span class="ident">Syntax::id</span>),
@@ -1005,6 +1007,7 @@
                 <span class="ident">Vertex</span> {
                     <span class="ident">lhs_syntax</span>: <span class="ident">lhs_parent</span>.<span class="ident">next_sibling</span>(),
                     <span class="ident">rhs_syntax</span>: <span class="ident">v</span>.<span class="ident">rhs_syntax</span>,
+                    <span class="ident">can_pop_either</span>: <span class="ident">can_pop_either_parent</span>(<span class="kw-2">&amp;</span><span class="ident">parents_next</span>),
                     <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                     <span class="ident">lhs_parent_id</span>: <span class="ident">lhs_parent</span>.<span class="ident">parent</span>().<span class="ident">map</span>(<span class="ident">Syntax::id</span>),
                     <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
@@ -1024,6 +1027,7 @@
                 <span class="ident">Vertex</span> {
                     <span class="ident">lhs_syntax</span>: <span class="ident">v</span>.<span class="ident">lhs_syntax</span>,
                     <span class="ident">rhs_syntax</span>: <span class="ident">rhs_parent</span>.<span class="ident">next_sibling</span>(),
+                    <span class="ident">can_pop_either</span>: <span class="ident">can_pop_either_parent</span>(<span class="kw-2">&amp;</span><span class="ident">parents_next</span>),
                     <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                     <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                     <span class="ident">rhs_parent_id</span>: <span class="ident">rhs_parent</span>.<span class="ident">parent</span>().<span class="ident">map</span>(<span class="ident">Syntax::id</span>),
@@ -1048,6 +1052,7 @@
                     <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
                     <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                     <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
+                    <span class="ident">can_pop_either</span>: <span class="ident">v</span>.<span class="ident">can_pop_either</span>,
                 },
             ));
             <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -1088,6 +1093,7 @@
                         <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                         <span class="ident">lhs_parent_id</span>: <span class="prelude-val">Some</span>(<span class="ident">lhs_syntax</span>.<span class="ident">id</span>()),
                         <span class="ident">rhs_parent_id</span>: <span class="prelude-val">Some</span>(<span class="ident">rhs_syntax</span>.<span class="ident">id</span>()),
+                        <span class="ident">can_pop_either</span>: <span class="bool-val">false</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -1120,6 +1126,7 @@
                         <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
                         <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                         <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
+                        <span class="ident">can_pop_either</span>: <span class="ident">v</span>.<span class="ident">can_pop_either</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -1143,16 +1150,13 @@
                         <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
                         <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                         <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
+                        <span class="ident">can_pop_either</span>: <span class="ident">v</span>.<span class="ident">can_pop_either</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
             }
             <span class="comment">// Step into this partially/fully novel list.</span>
-            <span class="ident">Syntax::List</span> {
-                <span class="ident">children</span>,
-                <span class="ident">num_descendants</span>,
-                ..
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Syntax::List</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">lhs_next</span> <span class="op">=</span> <span class="ident">children</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">copied</span>();
 
                 <span class="kw">let</span> <span class="ident">parents_next</span> <span class="op">=</span> <span class="ident">push_lhs_delimiter</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>.<span class="ident">parents</span>, <span class="ident">lhs_syntax</span>);
@@ -1167,25 +1171,10 @@
                         <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                         <span class="ident">lhs_parent_id</span>: <span class="prelude-val">Some</span>(<span class="ident">lhs_syntax</span>.<span class="ident">id</span>()),
                         <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
+                        <span class="ident">can_pop_either</span>: <span class="bool-val">true</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">num_descendants</span> <span class="op">&gt;</span> <span class="ident">NOVEL_TREE_THRESHOLD</span> <span class="op">&amp;&amp;</span> <span class="ident">lhs_syntax</span>.<span class="ident">parent</span>().<span class="ident">is_none</span>() {
-                    <span class="ident">buf</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="prelude-val">Some</span>((
-                        <span class="ident">NovelTreeLHS</span> {
-                            <span class="ident">num_descendants</span>: <span class="kw-2">*</span><span class="ident">num_descendants</span>,
-                        },
-                        <span class="ident">Vertex</span> {
-                            <span class="ident">lhs_syntax</span>: <span class="ident">lhs_syntax</span>.<span class="ident">next_sibling</span>(),
-                            <span class="ident">rhs_syntax</span>: <span class="ident">v</span>.<span class="ident">rhs_syntax</span>,
-                            <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
-                            <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
-                            <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
-                        },
-                    ));
-                    <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                }
             }
         }
     }
@@ -1204,16 +1193,13 @@
                         <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
                         <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                         <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
+                        <span class="ident">can_pop_either</span>: <span class="ident">v</span>.<span class="ident">can_pop_either</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
             }
             <span class="comment">// Step into this partially/fully novel list.</span>
-            <span class="ident">Syntax::List</span> {
-                <span class="ident">children</span>,
-                <span class="ident">num_descendants</span>,
-                ..
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Syntax::List</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">rhs_next</span> <span class="op">=</span> <span class="ident">children</span>.<span class="ident">get</span>(<span class="number">0</span>).<span class="ident">copied</span>();
 
                 <span class="kw">let</span> <span class="ident">parents_next</span> <span class="op">=</span> <span class="ident">push_rhs_delimiter</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>.<span class="ident">parents</span>, <span class="ident">rhs_syntax</span>);
@@ -1228,25 +1214,10 @@
                         <span class="ident">parents</span>: <span class="ident">parents_next</span>,
                         <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
                         <span class="ident">rhs_parent_id</span>: <span class="prelude-val">Some</span>(<span class="ident">rhs_syntax</span>.<span class="ident">id</span>()),
+                        <span class="ident">can_pop_either</span>: <span class="bool-val">true</span>,
                     },
                 ));
                 <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">num_descendants</span> <span class="op">&gt;</span> <span class="ident">NOVEL_TREE_THRESHOLD</span> <span class="op">&amp;&amp;</span> <span class="ident">rhs_syntax</span>.<span class="ident">parent</span>().<span class="ident">is_none</span>() {
-                    <span class="ident">buf</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="prelude-val">Some</span>((
-                        <span class="ident">NovelTreeRHS</span> {
-                            <span class="ident">num_descendants</span>: <span class="kw-2">*</span><span class="ident">num_descendants</span>,
-                        },
-                        <span class="ident">Vertex</span> {
-                            <span class="ident">lhs_syntax</span>: <span class="ident">v</span>.<span class="ident">lhs_syntax</span>,
-                            <span class="ident">rhs_syntax</span>: <span class="ident">rhs_syntax</span>.<span class="ident">next_sibling</span>(),
-                            <span class="ident">parents</span>: <span class="ident">v</span>.<span class="ident">parents</span>.<span class="ident">clone</span>(),
-                            <span class="ident">lhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">lhs_parent_id</span>,
-                            <span class="ident">rhs_parent_id</span>: <span class="ident">v</span>.<span class="ident">rhs_parent_id</span>,
-                        },
-                    ));
-                    <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                }
             }
         }
     }
@@ -1256,7 +1227,7 @@
     );
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mark_route</span>(<span class="ident">route</span>: <span class="kw-2">&amp;</span>[(<span class="ident">Edge</span>, <span class="ident">Vertex</span>)]) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">populate_change_map</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">route</span>: <span class="kw-2">&amp;</span>[(<span class="ident">Edge</span>, <span class="ident">Vertex</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>)], <span class="ident">change_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChangeMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
     <span class="kw">for</span> (<span class="ident">e</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="ident">route</span> {
         <span class="kw">match</span> <span class="ident">e</span> {
             <span class="ident">ExitDelimiterBoth</span> <span class="op">|</span> <span class="ident">ExitDelimiterLHS</span> <span class="op">|</span> <span class="ident">ExitDelimiterRHS</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1266,44 +1237,37 @@
                 <span class="comment">// No change on this node or its children.</span>
                 <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">lhs_syntax</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">rhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">lhs</span>.<span class="ident">set_change_deep</span>(<span class="ident">ChangeKind::Unchanged</span>(<span class="ident">rhs</span>));
-                <span class="ident">rhs</span>.<span class="ident">set_change_deep</span>(<span class="ident">ChangeKind::Unchanged</span>(<span class="ident">lhs</span>));
+
+                <span class="ident">insert_deep_unchanged</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>, <span class="ident">change_map</span>);
+                <span class="ident">insert_deep_unchanged</span>(<span class="ident">rhs</span>, <span class="ident">lhs</span>, <span class="ident">change_map</span>);
             }
             <span class="ident">EnterUnchangedDelimiter</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// No change on the outer delimiter, but children may</span>
                 <span class="comment">// have changed.</span>
                 <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">lhs_syntax</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">rhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">lhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Unchanged</span>(<span class="ident">rhs</span>));
-                <span class="ident">rhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Unchanged</span>(<span class="ident">lhs</span>));
+                <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>, <span class="ident">ChangeKind::Unchanged</span>(<span class="ident">rhs</span>));
+                <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>, <span class="ident">ChangeKind::Unchanged</span>(<span class="ident">lhs</span>));
             }
             <span class="ident">ReplacedComment</span> { <span class="ident">levenshtein_pct</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">lhs_syntax</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">rhs_syntax</span>.<span class="ident">unwrap</span>();
 
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">levenshtein_pct</span> <span class="op">&gt;</span> <span class="number">40</span> {
-                    <span class="ident">lhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::ReplacedComment</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>));
-                    <span class="ident">rhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::ReplacedComment</span>(<span class="ident">rhs</span>, <span class="ident">lhs</span>));
+                    <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>, <span class="ident">ChangeKind::ReplacedComment</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>));
+                    <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>, <span class="ident">ChangeKind::ReplacedComment</span>(<span class="ident">rhs</span>, <span class="ident">lhs</span>));
                 } <span class="kw">else</span> {
-                    <span class="ident">lhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Novel</span>);
-                    <span class="ident">rhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Novel</span>);
+                    <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>, <span class="ident">ChangeKind::Novel</span>);
+                    <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>, <span class="ident">ChangeKind::Novel</span>);
                 }
             }
             <span class="ident">NovelAtomLHS</span> { .. } <span class="op">|</span> <span class="ident">EnterNovelDelimiterLHS</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">lhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">lhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Novel</span>);
+                <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">lhs</span>, <span class="ident">ChangeKind::Novel</span>);
             }
             <span class="ident">NovelAtomRHS</span> { .. } <span class="op">|</span> <span class="ident">EnterNovelDelimiterRHS</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">rhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">rhs</span>.<span class="ident">set_change</span>(<span class="ident">ChangeKind::Novel</span>);
-            }
-            <span class="ident">NovelTreeLHS</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">lhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">lhs</span>.<span class="ident">set_change_deep</span>(<span class="ident">ChangeKind::Novel</span>);
-            }
-            <span class="ident">NovelTreeRHS</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">rhs_syntax</span>.<span class="ident">unwrap</span>();
-                <span class="ident">rhs</span>.<span class="ident">set_change_deep</span>(<span class="ident">ChangeKind::Novel</span>);
+                <span class="ident">change_map</span>.<span class="ident">insert</span>(<span class="ident">rhs</span>, <span class="ident">ChangeKind::Novel</span>);
             }
         }
     }

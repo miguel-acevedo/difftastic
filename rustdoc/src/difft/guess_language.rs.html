@@ -267,6 +267,51 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Guess which programming language a file is written in.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This is heavily based on GitHub&#39;s</span>
@@ -294,23 +339,36 @@
     <span class="ident">CPlusPlus</span>,
     <span class="ident">CSharp</span>,
     <span class="ident">Css</span>,
+    <span class="ident">Dart</span>,
     <span class="ident">Elixir</span>,
+    <span class="ident">Elm</span>,
     <span class="ident">EmacsLisp</span>,
+    <span class="ident">Gleam</span>,
     <span class="ident">Go</span>,
     <span class="ident">Haskell</span>,
+    <span class="ident">Hcl</span>,
+    <span class="ident">Janet</span>,
     <span class="ident">Java</span>,
     <span class="ident">JavaScript</span>,
     <span class="ident">Json</span>,
     <span class="ident">Jsx</span>,
+    <span class="ident">Kotlin</span>,
+    <span class="ident">Lua</span>,
+    <span class="ident">Nix</span>,
     <span class="ident">OCaml</span>,
     <span class="ident">OCamlInterface</span>,
     <span class="ident">Php</span>,
+    <span class="ident">Perl</span>,
     <span class="ident">Python</span>,
     <span class="ident">Ruby</span>,
     <span class="ident">Rust</span>,
     <span class="ident">Scala</span>,
+    <span class="ident">Swift</span>,
+    <span class="ident">Toml</span>,
     <span class="ident">Tsx</span>,
     <span class="ident">TypeScript</span>,
+    <span class="ident">Yaml</span>,
+    <span class="ident">Zig</span>,
 }
 
 <span class="kw">use</span> <span class="ident">Language</span>::<span class="kw-2">*</span>;
@@ -327,7 +385,10 @@
     }
 
     <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">extension</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">extension</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">from_extension</span>(<span class="ident">extension</span>, <span class="ident">src</span>),
+        <span class="prelude-val">Some</span>(<span class="ident">extension</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">from_extension</span>(<span class="ident">extension</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">Language::Php</span>) <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">starts_with</span>(<span class="string">&quot;&lt;?hh&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">language</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">language</span>,
+        },
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
     }
 }
@@ -356,22 +417,32 @@
             <span class="string">&quot;clojure&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Clojure</span>),
             <span class="string">&quot;csharp&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CSharp</span>),
             <span class="string">&quot;css&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Css</span>),
+            <span class="string">&quot;dart&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Dart</span>),
             <span class="string">&quot;c++&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CPlusPlus</span>),
             <span class="string">&quot;elixir&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Elixir</span>),
+            <span class="string">&quot;elm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Elm</span>),
             <span class="string">&quot;emacs-lisp&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">EmacsLisp</span>),
+            <span class="string">&quot;gleam&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Gleam</span>),
             <span class="string">&quot;go&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Go</span>),
             <span class="string">&quot;haskell&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Haskell</span>),
+            <span class="string">&quot;hcl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Hcl</span>),
+            <span class="string">&quot;janet&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Janet</span>),
             <span class="string">&quot;java&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Java</span>),
             <span class="string">&quot;js&quot;</span> <span class="op">|</span> <span class="string">&quot;js2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">JavaScript</span>),
             <span class="string">&quot;lisp&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CommonLisp</span>),
+            <span class="string">&quot;perl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Perl</span>),
             <span class="string">&quot;python&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Python</span>),
             <span class="string">&quot;rjsx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Jsx</span>),
             <span class="string">&quot;ruby&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Ruby</span>),
             <span class="string">&quot;rust&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Rust</span>),
             <span class="string">&quot;scala&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Scala</span>),
             <span class="string">&quot;sh&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Bash</span>),
+            <span class="string">&quot;swift&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Swift</span>),
+            <span class="string">&quot;toml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Toml</span>),
             <span class="string">&quot;tuareg&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">OCaml</span>),
             <span class="string">&quot;typescript&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">TypeScript</span>),
+            <span class="string">&quot;yaml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Yaml</span>),
+            <span class="string">&quot;zig&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Zig</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="kw">if</span> <span class="ident">lang</span>.<span class="ident">is_some</span>() {
@@ -402,8 +473,10 @@
                     <span class="string">&quot;chakra&quot;</span> <span class="op">|</span> <span class="string">&quot;d8&quot;</span> <span class="op">|</span> <span class="string">&quot;gjs&quot;</span> <span class="op">|</span> <span class="string">&quot;js&quot;</span> <span class="op">|</span> <span class="string">&quot;node&quot;</span> <span class="op">|</span> <span class="string">&quot;nodejs&quot;</span> <span class="op">|</span> <span class="string">&quot;qjs&quot;</span> <span class="op">|</span> <span class="string">&quot;rhino&quot;</span> <span class="op">|</span> <span class="string">&quot;v8&quot;</span>
                     <span class="op">|</span> <span class="string">&quot;v8-shell&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">JavaScript</span>),
                     <span class="string">&quot;ocaml&quot;</span> <span class="op">|</span> <span class="string">&quot;ocamlrun&quot;</span> <span class="op">|</span> <span class="string">&quot;ocamlscript&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">OCaml</span>),
+                    <span class="string">&quot;perl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Perl</span>),
                     <span class="string">&quot;python&quot;</span> <span class="op">|</span> <span class="string">&quot;python2&quot;</span> <span class="op">|</span> <span class="string">&quot;python3&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Python</span>),
                     <span class="string">&quot;ruby&quot;</span> <span class="op">|</span> <span class="string">&quot;macruby&quot;</span> <span class="op">|</span> <span class="string">&quot;rake&quot;</span> <span class="op">|</span> <span class="string">&quot;jruby&quot;</span> <span class="op">|</span> <span class="string">&quot;rbx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Ruby</span>),
+                    <span class="string">&quot;swift&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">Swift</span>),
                     <span class="string">&quot;deno&quot;</span> <span class="op">|</span> <span class="string">&quot;ts-node&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">TypeScript</span>),
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
                 }
@@ -424,15 +497,19 @@
             <span class="op">|</span> <span class="string">&quot;gradlew&quot;</span> <span class="op">|</span> <span class="string">&quot;kshrc&quot;</span> <span class="op">|</span> <span class="string">&quot;login&quot;</span> <span class="op">|</span> <span class="string">&quot;man&quot;</span> <span class="op">|</span> <span class="string">&quot;profile&quot;</span> <span class="op">|</span> <span class="string">&quot;zlogin&quot;</span> <span class="op">|</span> <span class="string">&quot;zlogout&quot;</span>
             <span class="op">|</span> <span class="string">&quot;zprofile&quot;</span> <span class="op">|</span> <span class="string">&quot;zshenv&quot;</span> <span class="op">|</span> <span class="string">&quot;zshrc&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Bash</span>),
             <span class="string">&quot;.emacs&quot;</span> <span class="op">|</span> <span class="string">&quot;_emacs&quot;</span> <span class="op">|</span> <span class="string">&quot;Cask&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">EmacsLisp</span>),
+            <span class="string">&quot;.arcconfig&quot;</span> <span class="op">|</span> <span class="string">&quot;.auto-changelog&quot;</span> <span class="op">|</span> <span class="string">&quot;.c8rc&quot;</span> <span class="op">|</span> <span class="string">&quot;.htmlhintrc&quot;</span> <span class="op">|</span> <span class="string">&quot;.imgbotconfig&quot;</span>
+            <span class="op">|</span> <span class="string">&quot;.nycrc&quot;</span> <span class="op">|</span> <span class="string">&quot;.tern-config&quot;</span> <span class="op">|</span> <span class="string">&quot;.tern-project&quot;</span> <span class="op">|</span> <span class="string">&quot;.watchmanconfig&quot;</span> <span class="op">|</span> <span class="string">&quot;Pipfile.lock&quot;</span>
+            <span class="op">|</span> <span class="string">&quot;composer.lock&quot;</span> <span class="op">|</span> <span class="string">&quot;mcmod.info&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Json</span>),
             <span class="string">&quot;TARGETS&quot;</span> <span class="op">|</span> <span class="string">&quot;BUCK&quot;</span> <span class="op">|</span> <span class="string">&quot;DEPS&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Python</span>),
             <span class="string">&quot;Gemfile&quot;</span> <span class="op">|</span> <span class="string">&quot;Rakefile&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Ruby</span>),
+            <span class="string">&quot;Cargo.lock&quot;</span> <span class="op">|</span> <span class="string">&quot;Gopkg.lock&quot;</span> <span class="op">|</span> <span class="string">&quot;Pipfile&quot;</span> <span class="op">|</span> <span class="string">&quot;poetry.lock&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Toml</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         },
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">from_extension</span>(<span class="ident">extension</span>: <span class="kw-2">&amp;</span><span class="ident">OsStr</span>, <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Language</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_extension</span>(<span class="ident">extension</span>: <span class="kw-2">&amp;</span><span class="ident">OsStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Language</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">extension</span>.<span class="ident">to_string_lossy</span>().<span class="ident">borrow</span>() {
         <span class="string">&quot;sh&quot;</span> <span class="op">|</span> <span class="string">&quot;bash&quot;</span> <span class="op">|</span> <span class="string">&quot;bats&quot;</span> <span class="op">|</span> <span class="string">&quot;cgi&quot;</span> <span class="op">|</span> <span class="string">&quot;command&quot;</span> <span class="op">|</span> <span class="string">&quot;env&quot;</span> <span class="op">|</span> <span class="string">&quot;fcgi&quot;</span> <span class="op">|</span> <span class="string">&quot;ksh&quot;</span> <span class="op">|</span> <span class="string">&quot;sh.in&quot;</span> <span class="op">|</span> <span class="string">&quot;tmux&quot;</span>
         <span class="op">|</span> <span class="string">&quot;tool&quot;</span> <span class="op">|</span> <span class="string">&quot;zsh&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Bash</span>),
@@ -440,9 +517,6 @@
         <span class="comment">// Treat .h as C++ rather than C. This is an arbitrary choice,</span>
         <span class="comment">// but C++ is more widely used than C according to</span>
         <span class="comment">// https://madnight.github.io/githut/</span>
-        <span class="comment">//</span>
-        <span class="comment">// TODO: allow users to override the association between</span>
-        <span class="comment">// extensions and parses.</span>
         <span class="string">&quot;cc&quot;</span> <span class="op">|</span> <span class="string">&quot;cpp&quot;</span> <span class="op">|</span> <span class="string">&quot;h&quot;</span> <span class="op">|</span> <span class="string">&quot;hh&quot;</span> <span class="op">|</span> <span class="string">&quot;hpp&quot;</span> <span class="op">|</span> <span class="string">&quot;cxx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CPlusPlus</span>),
         <span class="string">&quot;bb&quot;</span> <span class="op">|</span> <span class="string">&quot;boot&quot;</span> <span class="op">|</span> <span class="string">&quot;clj&quot;</span> <span class="op">|</span> <span class="string">&quot;cljc&quot;</span> <span class="op">|</span> <span class="string">&quot;clje&quot;</span> <span class="op">|</span> <span class="string">&quot;cljs&quot;</span> <span class="op">|</span> <span class="string">&quot;cljx&quot;</span> <span class="op">|</span> <span class="string">&quot;edn&quot;</span> <span class="op">|</span> <span class="string">&quot;joke&quot;</span> <span class="op">|</span> <span class="string">&quot;joker&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="prelude-val">Some</span>(<span class="ident">Clojure</span>)
@@ -450,23 +524,39 @@
         <span class="string">&quot;lisp&quot;</span> <span class="op">|</span> <span class="string">&quot;lsp&quot;</span> <span class="op">|</span> <span class="string">&quot;asd&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CommonLisp</span>),
         <span class="string">&quot;cs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">CSharp</span>),
         <span class="string">&quot;css&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Css</span>),
+        <span class="string">&quot;dart&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Dart</span>),
         <span class="string">&quot;el&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">EmacsLisp</span>),
+        <span class="string">&quot;elm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Elm</span>),
         <span class="string">&quot;ex&quot;</span> <span class="op">|</span> <span class="string">&quot;exs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Elixir</span>),
+        <span class="string">&quot;gleam&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Gleam</span>),
         <span class="string">&quot;go&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Go</span>),
         <span class="string">&quot;hs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Haskell</span>),
+        <span class="string">&quot;hcl&quot;</span> <span class="op">|</span> <span class="string">&quot;nomad&quot;</span> <span class="op">|</span> <span class="string">&quot;tf&quot;</span> <span class="op">|</span> <span class="string">&quot;tfvars&quot;</span> <span class="op">|</span> <span class="string">&quot;worfklow&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Hcl</span>),
+        <span class="string">&quot;janet&quot;</span> <span class="op">|</span> <span class="string">&quot;jdn&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Janet</span>),
         <span class="string">&quot;java&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Java</span>),
         <span class="string">&quot;cjs&quot;</span> <span class="op">|</span> <span class="string">&quot;js&quot;</span> <span class="op">|</span> <span class="string">&quot;mjs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">JavaScript</span>),
         <span class="string">&quot;jsx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Jsx</span>),
-        <span class="string">&quot;json&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Json</span>),
+        <span class="string">&quot;json&quot;</span> <span class="op">|</span> <span class="string">&quot;avsc&quot;</span> <span class="op">|</span> <span class="string">&quot;geojson&quot;</span> <span class="op">|</span> <span class="string">&quot;gltf&quot;</span> <span class="op">|</span> <span class="string">&quot;har&quot;</span> <span class="op">|</span> <span class="string">&quot;ice&quot;</span> <span class="op">|</span> <span class="string">&quot;JSON-tmLanguage&quot;</span> <span class="op">|</span> <span class="string">&quot;jsonl&quot;</span>
+        <span class="op">|</span> <span class="string">&quot;mcmeta&quot;</span> <span class="op">|</span> <span class="string">&quot;tfstate&quot;</span> <span class="op">|</span> <span class="string">&quot;tfstate.backup&quot;</span> <span class="op">|</span> <span class="string">&quot;topojson&quot;</span> <span class="op">|</span> <span class="string">&quot;webapp&quot;</span> <span class="op">|</span> <span class="string">&quot;webmanifest&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">Json</span>)
+        }
+        <span class="string">&quot;kt&quot;</span> <span class="op">|</span> <span class="string">&quot;ktm&quot;</span> <span class="op">|</span> <span class="string">&quot;kts&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Kotlin</span>),
+        <span class="string">&quot;lua&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Lua</span>),
+        <span class="string">&quot;nix&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Nix</span>),
         <span class="string">&quot;ml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">OCaml</span>),
         <span class="string">&quot;mli&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">OCamlInterface</span>),
-        <span class="string">&quot;php&quot;</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">src</span>.<span class="ident">starts_with</span>(<span class="string">&quot;&lt;?hh&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Php</span>),
+        <span class="string">&quot;php&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Php</span>),
+        <span class="string">&quot;pm&quot;</span> <span class="op">|</span> <span class="string">&quot;pl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Perl</span>),
         <span class="string">&quot;py&quot;</span> <span class="op">|</span> <span class="string">&quot;py3&quot;</span> <span class="op">|</span> <span class="string">&quot;pyi&quot;</span> <span class="op">|</span> <span class="string">&quot;bzl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Python</span>),
         <span class="string">&quot;rb&quot;</span> <span class="op">|</span> <span class="string">&quot;builder&quot;</span> <span class="op">|</span> <span class="string">&quot;spec&quot;</span> <span class="op">|</span> <span class="string">&quot;rake&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Ruby</span>),
         <span class="string">&quot;rs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Rust</span>),
         <span class="string">&quot;scala&quot;</span> <span class="op">|</span> <span class="string">&quot;sbt&quot;</span> <span class="op">|</span> <span class="string">&quot;sc&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Scala</span>),
+        <span class="string">&quot;swift&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Swift</span>),
+        <span class="string">&quot;toml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Toml</span>),
         <span class="string">&quot;ts&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">TypeScript</span>),
         <span class="string">&quot;tsx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Tsx</span>),
+        <span class="string">&quot;yaml&quot;</span> <span class="op">|</span> <span class="string">&quot;yml&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Yaml</span>),
+        <span class="string">&quot;zig&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Zig</span>),
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
     }
 }
@@ -513,7 +603,7 @@
     <span class="kw">fn</span> <span class="ident">test_guess_by_emacs_mode_second_line</span>() {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;foo&quot;</span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">guess</span>(<span class="ident">path</span>, <span class="string">&quot;!#/bin/bash\n; -*- mode: Lisp; -*-&quot;</span>),
+            <span class="ident">guess</span>(<span class="ident">path</span>, <span class="string">&quot;#!/bin/bash\n; -*- mode: Lisp; -*-&quot;</span>),
             <span class="prelude-val">Some</span>(<span class="ident">CommonLisp</span>)
         );
     }

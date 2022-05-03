@@ -820,74 +820,6 @@
 <span id="820">820</span>
 <span id="821">821</span>
 <span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
-<span id="846">846</span>
-<span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
-<span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-<span id="872">872</span>
-<span id="873">873</span>
-<span id="874">874</span>
-<span id="875">875</span>
-<span id="876">876</span>
-<span id="877">877</span>
-<span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
-<span id="882">882</span>
-<span id="883">883</span>
-<span id="884">884</span>
-<span id="885">885</span>
-<span id="886">886</span>
-<span id="887">887</span>
-<span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Calculating which modified lines should be displayed together.</span>
 
 <span class="doccomment">/// The maximum number of lines that may occur between changed lines in a hunk.</span>
@@ -898,6 +830,7 @@
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">constants::Side</span>,
     <span class="ident">context</span>::{<span class="ident">add_context</span>, <span class="ident">opposite_positions</span>, <span class="ident">MAX_PADDING</span>},
     <span class="ident">lines::LineNumber</span>,
     <span class="ident">side_by_side::lines_with_novel</span>,
@@ -950,7 +883,7 @@
             <span class="ident">deduped_lines</span>.<span class="ident">push</span>((
                 <span class="kw">if</span> <span class="ident">lhs_is_dupe</span> { <span class="prelude-val">None</span> } <span class="kw">else</span> { <span class="ident">lhs_line</span> },
                 <span class="kw">if</span> <span class="ident">rhs_is_dupe</span> { <span class="prelude-val">None</span> } <span class="kw">else</span> { <span class="ident">rhs_line</span> },
-            ))
+            ));
         }
 
         <span class="ident">Hunk</span> {
@@ -1234,10 +1167,91 @@
     <span class="ident">hunks</span>
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">enum</span> <span class="ident">Side</span> {
-    <span class="ident">LHS</span>,
-    <span class="ident">RHS</span>,
+<span class="doccomment">/// Given a sequence of novel MatchedPos values in a section between</span>
+<span class="doccomment">/// two unchanged MatchedPos values, return them in an order suited</span>
+<span class="doccomment">/// for displaying.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```text</span>
+<span class="doccomment">/// unchanged-before novel-1</span>
+<span class="doccomment">/// novel-2</span>
+<span class="doccomment">/// novel-3</span>
+<span class="doccomment">/// novel-4 unchanged-after</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// We need novel-1 to occur before novel-2/3, and novel-2/3 to occur</span>
+<span class="doccomment">/// before novel-4, so we can safely interleave LHS and RHS whilst</span>
+<span class="doccomment">/// still being monotonically increasing.</span>
+<span class="kw">fn</span> <span class="ident">novel_section_in_order</span>(
+    <span class="ident">lhs_novel_mps</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">MatchedPos</span>],
+    <span class="ident">rhs_novel_mps</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">MatchedPos</span>],
+    <span class="ident">lhs_prev_matched_line</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>,
+    <span class="ident">rhs_prev_matched_line</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>,
+    <span class="ident">opposite_to_lhs</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">LineNumber</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">opposite_to_rhs</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">LineNumber</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Side</span>, <span class="ident">MatchedPos</span>)<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Side</span>, <span class="ident">MatchedPos</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_iter</span> <span class="op">=</span> <span class="ident">lhs_novel_mps</span>.<span class="ident">iter</span>().<span class="ident">peekable</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_iter</span> <span class="op">=</span> <span class="ident">rhs_novel_mps</span>.<span class="ident">iter</span>().<span class="ident">peekable</span>();
+
+    <span class="comment">// Novel MatchedPos values that occur on the same line as the</span>
+    <span class="comment">// previous unchanged MatchedPos must occur first.</span>
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>) <span class="op">=</span> <span class="ident">lhs_iter</span>.<span class="ident">peek</span>() {
+        <span class="kw">let</span> <span class="ident">same_line_as_prev</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_prev_matched_line</span>) <span class="op">=</span> <span class="ident">lhs_prev_matched_line</span> {
+            <span class="ident">lhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span> <span class="op">=</span><span class="op">=</span> <span class="ident">lhs_prev_matched_line</span>
+        } <span class="kw">else</span> {
+            <span class="bool-val">false</span>
+        };
+        <span class="kw">if</span> <span class="ident">same_line_as_prev</span> {
+            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Left</span>, (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">lhs_mp</span>).<span class="ident">clone</span>()));
+            <span class="ident">lhs_iter</span>.<span class="ident">next</span>();
+        } <span class="kw">else</span> {
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>) <span class="op">=</span> <span class="ident">rhs_iter</span>.<span class="ident">peek</span>() {
+        <span class="kw">let</span> <span class="ident">same_line_as_prev</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_prev_matched_line</span>) <span class="op">=</span> <span class="ident">rhs_prev_matched_line</span> {
+            <span class="ident">rhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rhs_prev_matched_line</span>
+        } <span class="kw">else</span> {
+            <span class="bool-val">false</span>
+        };
+        <span class="kw">if</span> <span class="ident">same_line_as_prev</span> {
+            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Right</span>, (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">rhs_mp</span>).<span class="ident">clone</span>()));
+            <span class="ident">rhs_iter</span>.<span class="ident">next</span>();
+        } <span class="kw">else</span> {
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="comment">// Next, we want novel MatchedPos values that occur on lines</span>
+    <span class="comment">// without any unchanged MatchedPos values.</span>
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>) <span class="op">=</span> <span class="ident">lhs_iter</span>.<span class="ident">peek</span>() {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">opposite_to_lhs</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span>) {
+            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Left</span>, (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">lhs_mp</span>).<span class="ident">clone</span>()));
+            <span class="ident">lhs_iter</span>.<span class="ident">next</span>();
+        } <span class="kw">else</span> {
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>) <span class="op">=</span> <span class="ident">rhs_iter</span>.<span class="ident">peek</span>() {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">opposite_to_rhs</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">rhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span>) {
+            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Right</span>, (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">rhs_mp</span>).<span class="ident">clone</span>()));
+            <span class="ident">rhs_iter</span>.<span class="ident">next</span>();
+        } <span class="kw">else</span> {
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="comment">// Finally, the remainder of the novel MatchedPos values will be</span>
+    <span class="comment">// on the same line as the following unchanged MatchedPos value.</span>
+    <span class="kw">for</span> <span class="ident">lhs_mp</span> <span class="kw">in</span> <span class="ident">lhs_iter</span> {
+        <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Left</span>, (<span class="kw-2">*</span><span class="ident">lhs_mp</span>).<span class="ident">clone</span>()));
+    }
+    <span class="kw">for</span> <span class="ident">rhs_mp</span> <span class="kw">in</span> <span class="ident">rhs_iter</span> {
+        <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::Right</span>, (<span class="kw-2">*</span><span class="ident">rhs_mp</span>).<span class="ident">clone</span>()));
+    }
+
+    <span class="ident">res</span>
 }
 
 <span class="doccomment">/// Return a vec of novel MatchedPos values in an order suited for</span>
@@ -1249,6 +1263,8 @@
 <span class="kw">fn</span> <span class="ident">sorted_novel_positions</span>(
     <span class="ident">lhs_mps</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>],
     <span class="ident">rhs_mps</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>],
+    <span class="ident">opposite_to_lhs</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">LineNumber</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">opposite_to_rhs</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">LineNumber</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Side</span>, <span class="ident">MatchedPos</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_mps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">lhs_mps</span>.<span class="ident">to_vec</span>();
     <span class="ident">lhs_mps</span>.<span class="ident">sort_unstable_by_key</span>(<span class="op">|</span><span class="ident">mp</span><span class="op">|</span> <span class="ident">mp</span>.<span class="ident">pos</span>);
@@ -1256,77 +1272,59 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_mps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MatchedPos</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">rhs_mps</span>.<span class="ident">to_vec</span>();
     <span class="ident">rhs_mps</span>.<span class="ident">sort_unstable_by_key</span>(<span class="op">|</span><span class="ident">mp</span><span class="op">|</span> <span class="ident">mp</span>.<span class="ident">pos</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_prev_opposite</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_prev_opposite</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Side</span>, <span class="ident">MatchedPos</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_i</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_i</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">while</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>), <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>)) <span class="op">=</span> (<span class="ident">lhs_mps</span>.<span class="ident">get</span>(<span class="ident">lhs_i</span>), <span class="ident">rhs_mps</span>.<span class="ident">get</span>(<span class="ident">rhs_i</span>)) {
-        <span class="kw">match</span> (
-            <span class="ident">lhs_mp</span>.<span class="ident">kind</span>.<span class="ident">first_opposite_span</span>(),
-            <span class="ident">rhs_mp</span>.<span class="ident">kind</span>.<span class="ident">first_opposite_span</span>(),
-        ) {
-            (<span class="prelude-val">Some</span>(<span class="ident">lhs_opposite_span</span>), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// This is an unchanged position, so just update the</span>
-                <span class="comment">// opposite position.</span>
-                <span class="ident">lhs_prev_opposite</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_opposite_span</span>);
-                <span class="ident">lhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_prev_matched_line</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_prev_matched_line</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_novel_section</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_novel_section</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_iter</span> <span class="op">=</span> <span class="ident">lhs_mps</span>.<span class="ident">iter</span>().<span class="ident">peekable</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_iter</span> <span class="op">=</span> <span class="ident">rhs_mps</span>.<span class="ident">iter</span>().<span class="ident">peekable</span>();
+    <span class="kw">loop</span> {
+        <span class="kw">match</span> (<span class="ident">lhs_iter</span>.<span class="ident">peek</span>(), <span class="ident">rhs_iter</span>.<span class="ident">peek</span>()) {
+            (<span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>), <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>)) <span class="kw">if</span> <span class="op">!</span><span class="ident">lhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_novel</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">rhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_novel</span>() <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">res</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">novel_section_in_order</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">lhs_novel_section</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">rhs_novel_section</span>,
+                    <span class="ident">lhs_prev_matched_line</span>,
+                    <span class="ident">rhs_prev_matched_line</span>,
+                    <span class="ident">opposite_to_lhs</span>,
+                    <span class="ident">opposite_to_rhs</span>,
+                ));
+                <span class="ident">lhs_novel_section</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                <span class="ident">rhs_novel_section</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+
+                <span class="ident">lhs_prev_matched_line</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span>);
+                <span class="ident">rhs_prev_matched_line</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>.<span class="ident">pos</span>.<span class="ident">line</span>);
+                <span class="ident">lhs_iter</span>.<span class="ident">next</span>();
+                <span class="ident">rhs_iter</span>.<span class="ident">next</span>();
             }
-            (<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="ident">rhs_opposite_span</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// This is an unchanged position, so just update the</span>
-                <span class="comment">// opposite position.</span>
-                <span class="ident">rhs_prev_opposite</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_opposite_span</span>);
-                <span class="ident">rhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            (<span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>), <span class="kw">_</span>) <span class="kw">if</span> <span class="ident">lhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_novel</span>() <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">lhs_novel_section</span>.<span class="ident">push</span>(<span class="ident">lhs_mp</span>);
+                <span class="ident">lhs_iter</span>.<span class="ident">next</span>();
+            }
+            (<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>)) <span class="kw">if</span> <span class="ident">rhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_novel</span>() <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">rhs_novel_section</span>.<span class="ident">push</span>(<span class="ident">rhs_mp</span>);
+                <span class="ident">rhs_iter</span>.<span class="ident">next</span>();
             }
             (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert!</span>(<span class="ident">lhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_change</span>());
-                <span class="macro">assert!</span>(<span class="ident">rhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_change</span>());
-
-                <span class="kw">match</span> (<span class="ident">lhs_prev_opposite</span>, <span class="ident">rhs_prev_opposite</span>) {
-                    (<span class="prelude-val">None</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// If we see a novel LHS position and we don&#39;t</span>
-                        <span class="comment">// have a previous matched position, put it</span>
-                        <span class="comment">// first.</span>
-                        <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::LHS</span>, <span class="ident">lhs_mp</span>.<span class="ident">clone</span>()));
-                        <span class="ident">lhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                    }
-                    (<span class="kw">_</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// If we see a novel RHS position and we don&#39;t</span>
-                        <span class="comment">// have a previous matched position,</span>
-                        <span class="comment">// arbitrarily put it after novel LHS</span>
-                        <span class="comment">// positions. This prevents incorrect</span>
-                        <span class="comment">// interleaving.</span>
-                        <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::RHS</span>, <span class="ident">rhs_mp</span>.<span class="ident">clone</span>()));
-                        <span class="ident">rhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                    }
-                    (<span class="prelude-val">Some</span>(<span class="ident">lhs_prev_opposite</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// Both sides are novel. Take the side with the earlier opposite position.</span>
-                        <span class="kw">if</span> <span class="ident">lhs_prev_opposite</span> <span class="op">&lt;</span> <span class="ident">rhs_mp</span>.<span class="ident">pos</span> {
-                            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::LHS</span>, <span class="ident">lhs_mp</span>.<span class="ident">clone</span>()));
-                            <span class="ident">lhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                        } <span class="kw">else</span> {
-                            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::RHS</span>, <span class="ident">rhs_mp</span>.<span class="ident">clone</span>()));
-                            <span class="ident">rhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                        }
-                    }
-                }
+                <span class="kw">break</span>;
+            }
+            (<span class="ident">lhs_mp</span>, <span class="ident">rhs_mp</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;Should be impossible: every LHS Unchanged MatchedPos should have a corresponding RHS Unchanged MatchedPos\n  {:?}\n  {:?}&quot;</span>, <span class="ident">lhs_mp</span>, <span class="ident">rhs_mp</span>);
             }
         }
     }
 
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_mp</span>) <span class="op">=</span> <span class="ident">lhs_mps</span>.<span class="ident">get</span>(<span class="ident">lhs_i</span>) {
-        <span class="kw">if</span> <span class="ident">lhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_change</span>() {
-            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::LHS</span>, <span class="ident">lhs_mp</span>.<span class="ident">clone</span>()));
-        }
-        <span class="ident">lhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_mp</span>) <span class="op">=</span> <span class="ident">rhs_mps</span>.<span class="ident">get</span>(<span class="ident">rhs_i</span>) {
-        <span class="kw">if</span> <span class="ident">rhs_mp</span>.<span class="ident">kind</span>.<span class="ident">is_change</span>() {
-            <span class="ident">res</span>.<span class="ident">push</span>((<span class="ident">Side::RHS</span>, <span class="ident">rhs_mp</span>.<span class="ident">clone</span>()));
-        }
-        <span class="ident">rhs_i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
+    <span class="ident">res</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">novel_section_in_order</span>(
+        <span class="kw-2">&amp;</span><span class="ident">lhs_novel_section</span>,
+        <span class="kw-2">&amp;</span><span class="ident">rhs_novel_section</span>,
+        <span class="ident">lhs_prev_matched_line</span>,
+        <span class="ident">rhs_prev_matched_line</span>,
+        <span class="ident">opposite_to_lhs</span>,
+        <span class="ident">opposite_to_rhs</span>,
+    ));
 
     <span class="ident">res</span>
 }
@@ -1361,11 +1359,11 @@
     <span class="kw">let</span> <span class="ident">opposite_to_rhs</span> <span class="op">=</span> <span class="ident">opposite_positions</span>(<span class="ident">rhs_mps</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lines</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">for</span> (<span class="ident">side</span>, <span class="ident">mp</span>) <span class="kw">in</span> <span class="ident">sorted_novel_positions</span>(<span class="ident">lhs_mps</span>, <span class="ident">rhs_mps</span>) {
+    <span class="kw">for</span> (<span class="ident">side</span>, <span class="ident">mp</span>) <span class="kw">in</span> <span class="ident">sorted_novel_positions</span>(<span class="ident">lhs_mps</span>, <span class="ident">rhs_mps</span>, <span class="kw-2">&amp;</span><span class="ident">opposite_to_lhs</span>, <span class="kw-2">&amp;</span><span class="ident">opposite_to_rhs</span>) {
         <span class="kw">let</span> <span class="ident">self_line</span> <span class="op">=</span> <span class="ident">mp</span>.<span class="ident">pos</span>.<span class="ident">line</span>;
 
         <span class="kw">match</span> <span class="ident">side</span> {
-            <span class="ident">Side::LHS</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Side::Left</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">should_append</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">highest_lhs</span>) <span class="op">=</span> <span class="ident">highest_lhs</span> {
                     <span class="ident">self_line</span> <span class="op">&gt;</span> <span class="ident">highest_lhs</span>
                 } <span class="kw">else</span> {
@@ -1379,7 +1377,7 @@
                     <span class="ident">highest_lhs</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">self_line</span>);
                 }
             }
-            <span class="ident">Side::RHS</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Side::Right</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">should_append</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">highest_rhs</span>) <span class="op">=</span> <span class="ident">highest_rhs</span> {
                     <span class="ident">self_line</span> <span class="op">&gt;</span> <span class="ident">highest_rhs</span>
                 } <span class="kw">else</span> {
@@ -1401,120 +1399,6 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matched_pos_to_hunks</span>(<span class="ident">lhs_mps</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>], <span class="ident">rhs_mps</span>: <span class="kw-2">&amp;</span>[<span class="ident">MatchedPos</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Hunk</span><span class="op">&gt;</span> {
     <span class="ident">lines_to_hunks</span>(<span class="kw-2">&amp;</span><span class="ident">matched_novel_lines</span>(<span class="ident">lhs_mps</span>, <span class="ident">rhs_mps</span>), <span class="ident">lhs_mps</span>, <span class="ident">rhs_mps</span>)
-}
-
-<span class="doccomment">/// Ensure that we don&#39;t miss any intermediate values.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Before:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```text</span>
-<span class="doccomment">/// 1 11</span>
-<span class="doccomment">/// 3 14</span>
-<span class="doccomment">/// 4 --</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// After:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```text</span>
-<span class="doccomment">/// 1 10</span>
-<span class="doccomment">/// 2 12 (choosing to align even though content doesn&#39;t match)</span>
-<span class="doccomment">/// - 13 (fix uneven gap)</span>
-<span class="doccomment">/// 3 14</span>
-<span class="doccomment">/// 4 -- (preserve outer gaps)</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ensure_contiguous</span>(
-    <span class="ident">lines</span>: <span class="kw-2">&amp;</span>[(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs_min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rhs_min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-
-    <span class="kw">for</span> (<span class="ident">lhs_line</span>, <span class="ident">rhs_line</span>) <span class="kw">in</span> <span class="ident">lines</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_line</span>) <span class="op">=</span> <span class="ident">lhs_line</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lhs_prev_min</span>) <span class="op">=</span> <span class="ident">lhs_min</span> {
-                <span class="kw">if</span> <span class="ident">lhs_prev_min</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">lhs_line</span>.<span class="number">0</span> {
-                    <span class="ident">res</span>.<span class="ident">extend</span>((<span class="ident">lhs_prev_min</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>..<span class="ident">lhs_line</span>.<span class="number">0</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> (<span class="prelude-val">Some</span>(<span class="ident">l</span>.<span class="ident">into</span>()), <span class="prelude-val">None</span>)));
-                }
-            }
-            <span class="ident">lhs_min</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">lhs_line</span>);
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_line</span>) <span class="op">=</span> <span class="ident">rhs_line</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rhs_prev_min</span>) <span class="op">=</span> <span class="ident">rhs_min</span> {
-                <span class="kw">if</span> <span class="ident">rhs_prev_min</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">rhs_line</span>.<span class="number">0</span> {
-                    <span class="ident">res</span>.<span class="ident">extend</span>((<span class="ident">rhs_prev_min</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>..<span class="ident">rhs_line</span>.<span class="number">0</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">r</span>.<span class="ident">into</span>()))));
-                }
-            }
-            <span class="ident">rhs_min</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">rhs_line</span>);
-        }
-        <span class="ident">res</span>.<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">lhs_line</span>, <span class="kw-2">*</span><span class="ident">rhs_line</span>));
-    }
-
-    <span class="ident">res</span>
-}
-
-<span class="doccomment">/// Before:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 10 --</span>
-<span class="doccomment">/// 11 --</span>
-<span class="doccomment">/// -- 20</span>
-<span class="doccomment">/// 12 21</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// After:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 10 20</span>
-<span class="doccomment">/// 11 --</span>
-<span class="doccomment">/// 12 21</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The returned vec will contain no (None, None) pairs.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compact_gaps</span>(
-    <span class="ident">items</span>: <span class="kw-2">&amp;</span>[(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="comment">// A vec of the most recent single-sided lines, e.g.</span>
-    <span class="comment">//</span>
-    <span class="comment">// 10 --</span>
-    <span class="comment">// 11 --</span>
-    <span class="comment">//</span>
-    <span class="comment">// All items must be Some on the same side.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unpaired_lines</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-
-    <span class="kw">for</span> (<span class="ident">lhs_line</span>, <span class="ident">rhs_line</span>) <span class="kw">in</span> <span class="ident">items</span> {
-        <span class="kw">match</span> (<span class="ident">lhs_line</span>, <span class="ident">rhs_line</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">lhs_line</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">unpaired_lines</span>.<span class="ident">first</span>() {
-                    <span class="prelude-val">Some</span>((<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">rhs_line</span>))) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// We&#39;ve found a line that can be compacted.</span>
-                        <span class="ident">res</span>.<span class="ident">push</span>((<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">lhs_line</span>), <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">rhs_line</span>)));
-                        <span class="ident">unpaired_lines</span>.<span class="ident">remove</span>(<span class="number">0</span>);
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">unpaired_lines</span>.<span class="ident">push</span>((<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">lhs_line</span>), <span class="prelude-val">None</span>));
-                    }
-                }
-            }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">rhs_line</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">unpaired_lines</span>.<span class="ident">first</span>() {
-                    <span class="prelude-val">Some</span>((<span class="prelude-val">Some</span>(<span class="ident">lhs_line</span>), <span class="prelude-val">None</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// We&#39;ve found a line that can be compacted.</span>
-                        <span class="ident">res</span>.<span class="ident">push</span>((<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">lhs_line</span>), <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">rhs_line</span>)));
-                        <span class="ident">unpaired_lines</span>.<span class="ident">remove</span>(<span class="number">0</span>);
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">unpaired_lines</span>.<span class="ident">push</span>((<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">rhs_line</span>)));
-                    }
-                }
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">res</span>.<span class="ident">extend</span>(<span class="ident">unpaired_lines</span>);
-                <span class="ident">unpaired_lines</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-                <span class="ident">res</span>.<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">lhs_line</span>, <span class="kw-2">*</span><span class="ident">rhs_line</span>));
-            }
-        }
-    }
-
-    <span class="ident">res</span>.<span class="ident">extend</span>(<span class="ident">unpaired_lines</span>);
-    <span class="ident">res</span>
 }
 
 <span class="kw">fn</span> <span class="ident">either_side_equal</span>(
@@ -1541,22 +1425,35 @@
     <span class="ident">matched_lines</span>: <span class="kw-2">&amp;</span>[(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)],
     <span class="ident">hunk</span>: <span class="kw-2">&amp;</span><span class="ident">Hunk</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LineNumber</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-    <span class="comment">// TODO: Use binary search instead.</span>
-    <span class="kw">let</span> <span class="ident">hunk_first</span> <span class="op">=</span> <span class="ident">hunk</span>.<span class="ident">lines</span>.<span class="ident">first</span>().<span class="ident">expect</span>(<span class="string">&quot;Hunks are non-empty&quot;</span>);
-    <span class="kw">let</span> <span class="ident">hunk_last</span> <span class="op">=</span> <span class="ident">hunk</span>.<span class="ident">lines</span>.<span class="ident">last</span>().<span class="ident">expect</span>(<span class="string">&quot;Hunks are non-empty&quot;</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hunk_lhs_novel</span> <span class="op">=</span> <span class="ident">hunk</span>.<span class="ident">novel_lhs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="ident">hunk_lhs_novel</span>.<span class="ident">sort</span>();
 
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hunk_rhs_novel</span> <span class="op">=</span> <span class="ident">hunk</span>.<span class="ident">novel_rhs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="ident">hunk_rhs_novel</span>.<span class="ident">sort</span>();
+
+    <span class="kw">let</span> <span class="ident">hunk_smallest</span> <span class="op">=</span> (
+        <span class="ident">hunk_lhs_novel</span>.<span class="ident">first</span>().<span class="ident">copied</span>(),
+        <span class="ident">hunk_rhs_novel</span>.<span class="ident">first</span>().<span class="ident">copied</span>(),
+    );
+    <span class="kw">let</span> <span class="ident">hunk_largest</span> <span class="op">=</span> (
+        <span class="ident">hunk_lhs_novel</span>.<span class="ident">last</span>().<span class="ident">copied</span>(),
+        <span class="ident">hunk_rhs_novel</span>.<span class="ident">last</span>().<span class="ident">copied</span>(),
+    );
+
+    <span class="comment">// TODO: Use binary search instead.</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">start_i</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">matched_line</span>) <span class="kw">in</span> <span class="ident">matched_lines</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">if</span> <span class="ident">either_side_equal</span>(<span class="ident">matched_line</span>, <span class="ident">hunk_first</span>) {
+        <span class="kw">if</span> <span class="ident">either_side_equal</span>(<span class="ident">matched_line</span>, <span class="kw-2">&amp;</span><span class="ident">hunk_smallest</span>) {
             <span class="ident">start_i</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
             <span class="kw">break</span>;
         }
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">end_i</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">matched_line</span>) <span class="kw">in</span> <span class="ident">matched_lines</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">if</span> <span class="ident">either_side_equal</span>(<span class="ident">matched_line</span>, <span class="ident">hunk_last</span>) {
+    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">matched_line</span>) <span class="kw">in</span> <span class="ident">matched_lines</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">rev</span>() {
+        <span class="kw">if</span> <span class="ident">either_side_equal</span>(<span class="ident">matched_line</span>, <span class="kw-2">&amp;</span><span class="ident">hunk_largest</span>) {
             <span class="ident">end_i</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>);
+            <span class="kw">break</span>;
         }
     }
 
@@ -1620,10 +1517,10 @@
             },
         };
 
-        <span class="kw">let</span> <span class="ident">lhs_mps</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">novel_mp</span>.<span class="ident">clone</span>(), <span class="ident">matched_mp</span>];
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">sorted_novel_positions</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_mps</span>, <span class="kw-2">&amp;</span>[]);
+        <span class="kw">let</span> <span class="ident">lhs_mps</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">novel_mp</span>.<span class="ident">clone</span>(), <span class="ident">matched_mp</span>.<span class="ident">clone</span>()];
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">sorted_novel_positions</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_mps</span>, <span class="kw-2">&amp;</span>[<span class="ident">matched_mp</span>], <span class="kw-2">&amp;</span><span class="ident">HashMap::new</span>(), <span class="kw-2">&amp;</span><span class="ident">HashMap::new</span>());
 
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[(<span class="ident">Side::LHS</span>, <span class="ident">novel_mp</span>)]);
+        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[(<span class="ident">Side::Left</span>, <span class="ident">novel_mp</span>)]);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1679,39 +1576,6 @@
         <span class="kw">let</span> <span class="ident">hunks</span> <span class="op">=</span> <span class="ident">matched_pos_to_hunks</span>(<span class="kw-2">&amp;</span><span class="ident">lhs_mps</span>, <span class="kw-2">&amp;</span><span class="ident">rhs_mps</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">hunks</span>.<span class="ident">len</span>(), <span class="number">1</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">hunks</span>[<span class="number">0</span>].<span class="ident">lines</span>, <span class="macro">vec!</span>[(<span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()))]);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_compact_gaps</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">compact_gaps</span>(<span class="kw-2">&amp;</span>[
-            (<span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()), <span class="prelude-val">None</span>),
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>())),
-            (<span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>())),
-        ]);
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">res</span>,
-            <span class="macro">vec!</span>[
-                (<span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>())),
-                (<span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>())),
-            ]
-        )
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_compact_gaps_with_larger_gap</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">compact_gaps</span>(<span class="kw-2">&amp;</span>[
-            (<span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()), <span class="prelude-val">None</span>),
-            (<span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>()), <span class="prelude-val">None</span>),
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>())),
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>())),
-        ]);
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">res</span>,
-            <span class="macro">vec!</span>[
-                (<span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">0</span>.<span class="ident">into</span>())),
-                (<span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="number">1</span>.<span class="ident">into</span>())),
-            ]
-        )
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

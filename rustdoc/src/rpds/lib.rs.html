@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;rpds-0.11.0&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rpds/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;rpds-0.10.0&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rpds/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -384,12 +384,6 @@
 <span id="384">384</span>
 <span id="385">385</span>
 <span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
 </pre><pre class="rust"><code><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -401,16 +395,10 @@
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::pedantic</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::match_bool</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::if_not_else</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::module_name_repetitions</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::stutter</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::similar_names</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::use_self</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::single_match_else</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::unnested_or_patterns</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::wildcard_imports</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::enum_glob_use</span>)]</span>
 <span class="comment">// Note: If you change this remember to update `README.md`.  To do so run `./tools/update-readme.sh`.</span>
 <span class="doccomment">//! # Rust Persistent Data Structures</span>
 <span class="doccomment">//!</span>
@@ -440,7 +428,7 @@
 <span class="doccomment">//!   8. [`RedBlackTreeSet`](#redblacktreeset)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `List`</span>
-<span class="doccomment">//! [![List documentation](https://img.shields.io/badge/doc-List-303070.svg)](crate::list::List)</span>
+<span class="doccomment">//! [![List documentation](https://img.shields.io/badge/doc-List-303070.svg)](./list/struct.List.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Your classic functional list.</span>
 <span class="doccomment">//!</span>
@@ -463,7 +451,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `Vector`</span>
-<span class="doccomment">//! [![`Vector` documentation](https://img.shields.io/badge/doc-Vector-303070.svg)](crate::vector::Vector)</span>
+<span class="doccomment">//! [![`Vector` documentation](https://img.shields.io/badge/doc-Vector-303070.svg)](./vector/struct.Vector.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A sequence that can be indexed.  The implementation is described in</span>
 <span class="doccomment">//! [Understanding Persistent Vector Part 1](http://hypirion.com/musings/understanding-persistent-vector-pt-1)</span>
@@ -489,7 +477,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `Stack`</span>
-<span class="doccomment">//! [![`Stack` documentation](https://img.shields.io/badge/doc-Stack-303070.svg)](crate::stack::Stack)</span>
+<span class="doccomment">//! [![`Stack` documentation](https://img.shields.io/badge/doc-Stack-303070.svg)](./stack/struct.Stack.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A LIFO (last in, first out) data structure.  This is just a [`List`](#list) in disguise.</span>
 <span class="doccomment">//!</span>
@@ -512,7 +500,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `Queue`</span>
-<span class="doccomment">//! [![`Queue` documentation](https://img.shields.io/badge/doc-Queue-303070.svg)](crate::queue::Queue)</span>
+<span class="doccomment">//! [![`Queue` documentation](https://img.shields.io/badge/doc-Queue-303070.svg)](./queue/struct.Queue.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A FIFO (first in, first out) data structure.</span>
 <span class="doccomment">//!</span>
@@ -534,7 +522,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `HashTrieMap`</span>
-<span class="doccomment">//! [![`HashTrieMap` documentation](https://img.shields.io/badge/doc-HashTrieMap-303070.svg)](crate::map::hash_trie_map::HashTrieMap)</span>
+<span class="doccomment">//! [![`HashTrieMap` documentation](https://img.shields.io/badge/doc-HashTrieMap-303070.svg)](./map/hash_trie_map/struct.HashTrieMap.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A map implemented with a [hash array mapped trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie).</span>
 <span class="doccomment">//! See [Ideal Hash Trees](https://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf) for</span>
@@ -563,7 +551,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `HashTrieSet`</span>
-<span class="doccomment">//! [![`HashTrieSet` documentation](https://img.shields.io/badge/doc-HashTrieSet-303070.svg)](crate::set::hash_trie_set::HashTrieSet)</span>
+<span class="doccomment">//! [![`HashTrieSet` documentation](https://img.shields.io/badge/doc-HashTrieSet-303070.svg)](./set/hash_trie_set/struct.HashTrieSet.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A set implemented with a [`HashTrieMap`](#hashtriemap).</span>
 <span class="doccomment">//!</span>
@@ -588,7 +576,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `RedBlackTreeMap`</span>
-<span class="doccomment">//! [![`RedBlackTreeMap` documentation](https://img.shields.io/badge/doc-RedBlackTreeMap-303070.svg)](crate::map::red_black_tree_map::RedBlackTreeMap)</span>
+<span class="doccomment">//! [![`RedBlackTreeMap` documentation](https://img.shields.io/badge/doc-RedBlackTreeMap-303070.svg)](./map/red_black_tree_map/struct.RedBlackTreeMap.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A map implemented with a [red-black tree](https://en.wikipedia.org/wiki/Red-Black_tree).</span>
 <span class="doccomment">//!</span>
@@ -617,7 +605,7 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### `RedBlackTreeSet`</span>
-<span class="doccomment">//! [![`RedBlackTreeSet` documentation](https://img.shields.io/badge/doc-RedBlackTreeSet-303070.svg)](crate::set::red_black_tree_set::RedBlackTreeSet)</span>
+<span class="doccomment">//! [![`RedBlackTreeSet` documentation](https://img.shields.io/badge/doc-RedBlackTreeSet-303070.svg)](./set/red_black_tree_set/struct.RedBlackTreeSet.html)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A set implemented with a [`RedBlackTreeMap`](#redblacktreemap).</span>
 <span class="doccomment">//!</span>
@@ -688,8 +676,8 @@
 <span class="doccomment">//! To create a thread-safe version of any data structure use `new_sync()`:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! # use rpds::Vector;</span>
-<span class="doccomment">//! #</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/ use rpds::Vector;</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/</span>
 <span class="doccomment">//! let vec = Vector::new_sync()</span>
 <span class="doccomment">//!     .push_back(42);</span>
 <span class="doccomment">//! ```</span>
@@ -697,8 +685,8 @@
 <span class="doccomment">//! Or use the `_sync` variant of the initialization macro:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! # use rpds::vector_sync;</span>
-<span class="doccomment">//! #</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/ use rpds::vector_sync;</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/</span>
 <span class="doccomment">//! let vec = vector_sync!(42);</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
@@ -718,8 +706,8 @@
 <span class="doccomment">//! as for the values it stores.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! There are two implementations of reference-counting pointers in the standard library:</span>
-<span class="doccomment">//! [`Rc`](::alloc::rc::Rc) and</span>
-<span class="doccomment">//! [`Arc`](::alloc::sync::Arc).  They behave the same way, but</span>
+<span class="doccomment">//! [`Rc`](https://doc.rust-lang.org/std/rc/struct.Rc.html) and</span>
+<span class="doccomment">//! [`Arc`](https://doc.rust-lang.org/std/sync/struct.Arc.html).  They behave the same way, but</span>
 <span class="doccomment">//! `Arc` allows you to share the data it points to across multiple threads.  The downside is that</span>
 <span class="doccomment">//! it is significantly slower to clone and drop than `Rc`, and persistent data structures do a</span>
 <span class="doccomment">//! lot of those operations. In some microbenchmarks with rpds data structure we can see that</span>
@@ -733,8 +721,8 @@
 <span class="doccomment">//! The pointer type can be parameterized like this:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! # use rpds::Vector;</span>
-<span class="doccomment">//! #</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/ use rpds::Vector;</span>
+<span class="doccomment">//! # /*DROP_LINE_IN_README*/</span>
 <span class="doccomment">//! let vec: Vector&lt;u32, archery::ArcK&gt; = Vector::new_with_ptr_kind();</span>
 <span class="doccomment">//! //                              ↖</span>
 <span class="doccomment">//! //                                This will use `Arc` pointers.</span>
